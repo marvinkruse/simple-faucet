@@ -6,8 +6,8 @@ interface ERC20 {
 }
 
 contract Faucet {
-    uint256 constant tokenAmount = 100000000000000000000;
-    uint256 constant waitTime = 30 minutes;
+    uint256 constant public tokenAmount = 100000000000000000000;
+    uint256 constant public waitTime = 30 minutes;
 
     ERC20 public tokenInstance;
     
@@ -24,7 +24,7 @@ contract Faucet {
         lastAccessTime[msg.sender] = block.timestamp + waitTime;
     }
 
-    function allowedToWithdraw(address _address) internal view returns (bool) {
+    function allowedToWithdraw(address _address) public view returns (bool) {
         if(lastAccessTime[_address] == 0) {
             return true;
         } else if(block.timestamp >= lastAccessTime[_address]) {

@@ -4,28 +4,52 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=yes">
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous" />
+	<link rel="stylesheet" type="text/css" href="style.css">
+	<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
 	<script src="https://code.jquery.com/jquery-3.2.1.min.js" crossorigin="anonymous"></script>
-	<script src="js/faucet.js" crossorigin="anonymous"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-
+	<script src="faucet.js"></script>
 	<title>Simple Faucet</title>
 </head>
 
 <body>
-	<h1 class="title">Simple Faucet</h1>
-	<div id="metamaskInfo"></div>
-	<strong>Address:</strong>
+	<h1 id="title">Simple Faucet</h1>
+	<div id="description">
+		<p id="intro">Welcome to the simple faucet, a minimalistic ERC20-token faucet for Ethereum. Developing dApps or smart contracts requires you to test what you have built. 
+		Since begging for tokens face-to-face is outdated, this faucet offers a very easy smart contract based solution. 
+		Just click the button below and you will receive some test tokens. The only thing that you need is Metamask.<br></p>
+		<div id="wrong_network">It seems that you are <strong>not connected to the testnet</strong>. Please switch to it via Metamask. If you haven't added the testnet already, follow these simple steps:
+		<ol>
+			<li>Open and unlock your Metamask</li>
+			<li>Click on the network selector at the top</li>
+			<li>Select "Custom RPC"</li>
+			<li>Scroll down to "New Network" and enter the following (enable the advanced options):</li>
+			<ul>
+				<li>New RPC URL: <br><span id="rpc_url" class="metamask_info"></span></li>
+				<li>ChainID: <span id="network_id" class="metamask_info"></span></li>
+				<li>Nickname: <span class="metamask_info">MyFancyTestnet</span></li>
+			</ul>
+			<li>Click on save and you're done!</li>
+		</ol>
+	</div>
+	<div id="correct_network"><strong>You are connected to the right testnet - great!</strong><br>Go ahead and claim some tokens!
+	</div>
+</div>
+<div id="faucet">
+	<h2>Your Address:</h2>
 	<div id="address">0x0000000000000000000000000000000000000000</div>
 
-	Ether:
+	<h2>Your Ether Balance:</h2>
 	<div id="balanceETH">0</div>
 
-	Tokens:
+	<h2>Your Token Balance:</h2>
 	<div id="balanceToken">0</div>
 	<button id="requestButton" type="button" class="btn btn-primary" disabled>Request Test Tokens</button>
 	<div id="warning"></div>
-
+</div>
+<div id="footer">
+<a href="https://github.com/marvinkruse/simple-faucet" target="_blank">View on GitHub</a>
+</div>
 </body>
 
 </html>

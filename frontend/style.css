@@ -1,0 +1,70 @@
+body {
+    width: 550px;
+    margin-top: 20px;
+    margin-left: auto;
+    margin-right: auto;
+    font-family: 'Roboto';
+}
+
+h1 {
+    text-align: center;
+    font-weight: 600;
+}
+
+#intro {
+    text-align: justify;
+}
+
+#wrong_network {
+    margin-top: 20px;
+}
+
+.metamask_info {
+    text-decoration: underline;
+    font-weight: 600;
+}
+
+ul li {
+    margin-left: -15px;
+}
+
+#correct_network {
+    margin-top: 20px;
+    text-align: center;
+    font-weight: 500;
+    display: none;
+}
+
+#faucet {
+    margin-top: 30px;
+    text-align: center;
+    display: none;
+}
+
+#faucet h2 {
+    font-style: inherit;
+    font-size: 1.1em;
+    font-weight: 700;
+    margin-bottom: -3px;
+    margin-top: 10px;
+}
+
+#requestButton {
+    margin-top: 20px;
+    margin-bottom: 10px;
+    font-weight: 500;
+}
+
+#requestButton:disabled,
+#requestButton[disabled]{
+    cursor: no-drop;
+}
+
+#warning {
+    font-style: italic;
+}
+
+#footer {
+    margin-top: 40px;
+    text-align: center;
+}

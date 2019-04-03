@@ -6,11 +6,11 @@ $(document).ready(function() {
 	var contract_token;
 	var contract_faucet;
 	var token_address = '0x4ecc65e392eb078926bbe36d5c46e6824b14950a';
-	var faucet_address = '0x0000000000000000000000000000000000000000';
+	var faucet_address = '0xb7Fc2C56F82343D01B82e666Bb90a5a899aA0868';
+	var networkID = 18263546;
 
 	var balanceETH = 0;
 	var balanceToken = 0;
-	/************************************ Functions ***************************************************/
 
 	function initialize() {
 		return function() {
@@ -20,17 +20,12 @@ $(document).ready(function() {
 		}
 	}
 
-
-	//sets account and ethereum balance of that account
 	function setAccount() {
-		//make sure using rinkeby
 		web3.version.getNetwork(function(err, netId) {
-			if (netId == 18263546) { // 18263546
-				//set the account display
+			if (netId == networkID) { 
 				$("#metamaskInfo").hide();
 				account = web3.eth.accounts[0];
 				$("#address").text(account);
-				// set the ethereum balance display
 				web3.eth.getBalance(account, function(err, res) {
 					balanceETH = Number(web3.fromWei(res, 'ether'));
 					$('#balanceETH').text(balanceETH + " ETH");
@@ -47,23 +42,34 @@ $(document).ready(function() {
 		//set token balance display
 		contract_token.balanceOf(web3.eth.accounts[0], function(errCall, result) {
 			if(!errCall) {
+				$('#balanceToken').text(web3.fromWei(balanceToken, 'ether') + " Tokens");
 				if(Number(result) != balanceToken) {
 					balanceToken = Number(result);
 					$('#balanceToken').text(web3.fromWei(balanceToken, 'ether') + " Tokens");
 				}
-			} else {
-				console.log(errCall);
 			}
 		});
 	}
+	
 
 	function checkFaucet() {
+		var tokenAmount = 0;
+		contract_faucet.tokenAmount(function(err, result) {
+			if(!err) {
+				tokenAmount = result;
+				$("#requestButton").text("Request " + web3.fromWei(result, 'ether') + " Test Tokens");
+			}
+		});
 		contract_faucet.allowedToWithdraw(web3.eth.accounts[0], function(err, result) {
 			if(!err) {
-				if(result && balanceToken < 10) {
+				if(result && balanceToken < tokenAmount*1000) {
 					$("#requestButton").removeAttr('disabled');
 				} else {
-					$("#warning").html("Sorry - you can only request tokens every 30 minutes. Please wait!")
+					contract_faucet.waitTime(function(err, result) {
+						if(!err) {
+							$("#warning").html("Sorry - you can only request tokens every " + (result)/60 + " minutes. Please wait!")
+						}
+					});
 				}	
 
 			}
@@ -73,7 +79,7 @@ $(document).ready(function() {
 	function getTestTokens() {
 		web3.eth.getTransactionCount(account, function(errNonce, nonce) {
 			if(!errNonce) {
-				contract_faucet.getTestTokens({value:0, gas: 200000, from: account, nonce: nonce}, function(errCall, result) {
+				contract_faucet.requestTokens({value:0, gas: 200000, gasPrice: 0, from: account, nonce: nonce}, function(errCall, result) {
 					if(!errCall) {
 						testTokensRequested = true;
 						$('#getTokens').hide();

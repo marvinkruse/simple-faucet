@@ -1,0 +1,40 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+
+interface ERC20 {
+    function transfer(address to, uint256 value) external returns (bool);
+    event Transfer(address indexed from, address indexed to, uint256 value);
+}
+
+contract SwanFaucet is OwnableUpgradeable {
+    uint256 constant public tokenAmount = 10000000000; //100 token x 10^8
+    uint256 constant public waitTime = 24 hours;
+
+    ERC20 public tokenInstance;
+    
+    mapping(address => uint256) nextAccessTime;
+
+    function initialize(address _tokenInstance) public initializer {
+        require(_tokenInstance != address(0));
+        tokenInstance = ERC20(_tokenInstance);
+    }
+
+    function requestTokens() public {
+        require(allowedToWithdraw(msg.sender));
+        nextAccessTime[msg.sender] = block.timestamp + waitTime;
+
+        // transfer after setting internal state
+        tokenInstance.transfer(msg.sender, tokenAmount);
+    }
+
+    function allowedToWithdraw(address _address) public view returns (bool) {
+        if(nextAccessTime[_address] == 0) {
+            return true;
+        } else if(block.timestamp >= nextAccessTime[_address]) {
+            return true;
+        }
+        return false;
+    }
+}

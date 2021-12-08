@@ -1,5 +1,5 @@
-# Simple Faucet
-Simple Faucet is a pretty minimalistic faucet for Ethereum-based ERC20 tokens. It's based on a simple smart contract that will allow you to withdraw some tokens every couple of minutes. The amount of tokens and the waiting period can be defined upon deployment of the smart contract. It works with Metamask in your browser, so it's very easy to use.
+# Swan Faucet
+Swan Faucet is a pretty minimalistic faucet for Ethereum-based ERC20 tokens. It's based on a simple smart contract that will allow you to withdraw some tokens every couple of minutes. The amount of tokens and the waiting period can be defined upon deployment of the smart contract. It works with Metamask in your browser, so it's very easy to use.
 
 ## How to use it
 In order to use and deploy this simple faucet, you need to deploy the smart contract and the frontend. To do this follow the tutorial below.

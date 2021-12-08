@@ -9,19 +9,13 @@ interface ERC20 {
 }
 
 contract SwanFaucet is OwnableUpgradeable {
-    uint256 constant public tokenAmount = 100000000000000000000; //100 token
+    uint256 constant public tokenAmount = 10000000000; //100 token x 10^8
     uint256 constant public waitTime = 24 hours;
 
     ERC20 public tokenInstance;
     
     mapping(address => uint256) nextAccessTime;
 
-    /*
-    constructor(address _tokenInstance)  {
-        require(_tokenInstance != address(0));
-        tokenInstance = ERC20(_tokenInstance);
-    }
-    */
     function initialize(address _tokenInstance) public initializer {
         require(_tokenInstance != address(0));
         tokenInstance = ERC20(_tokenInstance);

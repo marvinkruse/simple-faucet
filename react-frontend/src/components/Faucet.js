@@ -17,7 +17,7 @@ const CorrectNetwork = (props) => {
       setMaticBalance(web3.utils.fromWei(matic, 'ether'))
 
       const tokens = await token.methods.balanceOf(address).call()
-      setTokenBalance(tokens.toString())
+      setTokenBalance(web3.utils.fromWei(tokens, 'ether'))
     } else {
       setMaticBalance(0)
       setTokenBalance(0)
@@ -25,35 +25,40 @@ const CorrectNetwork = (props) => {
   }
 
   const sendRequest = async (address) => {
-    const transaction = await faucet.methods
-      .requestTokens()
-      .send({ from: address })
+    const allowedToWithdraw = await faucet.methods
+      .allowedToWithdraw(address)
+      .call()
 
-    console.log(transaction)
+    if (allowedToWithdraw) {
+      const transaction = await faucet.methods
+        .requestTokens()
+        .send({ from: address })
+
+      console.log(transaction)
+    } else {
+      alert('You have already used this faucet, please try again later.')
+    }
   }
 
   return (
-    <div>
-      <div>Correct Network!</div>
-      <div id="faucet">
-        <h2>Your Address:</h2>
-        <input
-          className="address-text"
-          type="text"
-          value={account}
-          onChange={handleChange}
-        />
+    <div id="faucet">
+      <h2>Your Address:</h2>
+      <input
+        className="address-text"
+        type="text"
+        value={account}
+        onChange={handleChange}
+      />
 
-        <h2>Your MATIC Balance:</h2>
-        <div id="balanceETH">{maticBalance}</div>
+      <h2>Your MATIC Balance:</h2>
+      <div id="balanceETH">{maticBalance}</div>
 
-        <h2>Your Token Balance:</h2>
-        <div id="balanceToken">{tokenBalance}</div>
+      <h2>Your Token Balance:</h2>
+      <div id="balanceToken">{tokenBalance}</div>
 
-        <button id="faucet-btn" onClick={() => sendRequest(account)}>
-          Request 100 Tokens
-        </button>
-      </div>
+      <button id="faucet-btn" onClick={() => sendRequest(account)}>
+        Request 100 Tokens
+      </button>
     </div>
   )
 }

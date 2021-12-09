@@ -1,12 +1,16 @@
-import { React, useState, useEffect } from 'react'
+import { React, useState } from 'react'
+import axios from 'axios'
 
-const CorrectNetwork = (props) => {
+const Faucet = (props) => {
   const web3 = props.web3
   const faucet = props.faucetContract // faucet contract
   const token = props.tokenContract // token contract
+  const server = props.server
   const [account, setAccount] = useState('')
   const [maticBalance, setMaticBalance] = useState(0)
   const [tokenBalance, setTokenBalance] = useState(0)
+  const [isLoading, setIsLoading] = useState(false)
+  const [txHash, setTxHash] = useState('')
 
   // whenever the textfield changes, check if it is valid address, then get MATIC and token balance of address
   const handleChange = async (e) => {
@@ -24,19 +28,45 @@ const CorrectNetwork = (props) => {
     }
   }
 
-  const sendRequest = async (address) => {
-    const allowedToWithdraw = await faucet.methods
-      .allowedToWithdraw(address)
-      .call()
+  const buttonClicked = async (address) => {
+    setIsLoading(true)
 
-    if (allowedToWithdraw) {
-      const transaction = await faucet.methods
-        .requestTokens()
-        .send({ from: address })
+    // first check if the address is valid
+    if (web3.utils.isAddress(address)) {
+      // check if they are allowed to withdraw (24 hours)
+      const allowedToWithdraw = await faucet.methods
+        .allowedToWithdraw(address)
+        .call()
 
-      console.log(transaction)
-    } else {
-      alert('You have already used this faucet, please try again later.')
+      if (allowedToWithdraw) {
+        try {
+          // send request for tokens
+          const response = await sendRequest({ account: address })
+          console.log(response)
+          // if success, update balance and display tx_hash
+          if (response.message === 'success')
+            setTokenBalance(parseInt(tokenBalance) + 100)
+          setTxHash(response.tx_hash)
+        } catch (err) {
+          console.error(err)
+        }
+      } else {
+        alert('You have already used this faucet, please try again later.')
+      }
+    }
+    setIsLoading(false)
+  }
+
+  // send post request to server to send contract method
+  const sendRequest = async (jsonObject) => {
+    try {
+      const response = await axios.post(server, jsonObject, {
+        headers: { 'Content-Type': 'application/json' },
+      })
+      return response.data
+    } catch (err) {
+      // Handle Error Here
+      console.error(err)
     }
   }
 
@@ -56,11 +86,27 @@ const CorrectNetwork = (props) => {
       <h2>Your Token Balance:</h2>
       <div id="balanceToken">{tokenBalance}</div>
 
-      <button id="faucet-btn" onClick={() => sendRequest(account)}>
+      <button
+        id="faucet-btn"
+        disabled={isLoading}
+        onClick={() => buttonClicked(account)}
+      >
         Request 100 Tokens
       </button>
+
+      {isLoading ? <h3>Sending Tokens...</h3> : <></>}
+      {txHash ? (
+        <div>
+          <h3>Transaction Hash:</h3>
+          <a href={`https://polygonscan.com/tx/${txHash}`} rel="noreferrer">
+            {txHash}
+          </a>
+        </div>
+      ) : (
+        <></>
+      )}
     </div>
   )
 }
 
-export default CorrectNetwork
+export default Faucet

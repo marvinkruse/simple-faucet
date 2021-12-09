@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react'
 import CorrectNetwork from './components/CorrectNetwork'
 import IncorrectNetwork from './components/IncorrectNetwork'
 import Web3 from 'web3'
+import faucetABI from './abi/SwanFaucet.json'
+import tokenABI from './abi/USDC.json'
 
 function App() {
   //////////////////////////////////////////////////////////////////////////////
@@ -15,10 +17,12 @@ function App() {
   ////     INSERT THE TOKEN AND FAUCET ADDRESS HERE                       //////
   //////////////////////////////////////////////////////////////////////////////
   var token_address = '0xe11A86849d99F524cAC3E7A0Ec1241828e332C62'
-  var faucet_address = '0x188b2685030137b9105d302E30F0D280F7Fa814A'
+  var faucet_address = '0x099e67a3f29B16C6FFCC621f3c7Ddf64eAfBf632'
   //////////////////////////////////////////////////////////////////////////////
 
   const web3 = new Web3('https://matic-mumbai.chainstacklabs.com')
+  const faucetContract = new web3.eth.Contract(faucetABI, faucet_address)
+  const tokenContract = new web3.eth.Contract(tokenABI, token_address)
   const [currentNetwork, setCurrentNetwork] = useState(
     web3.givenProvider.networkVersion,
   )
@@ -28,17 +32,15 @@ function App() {
   )
 
   // checks for metamask, adds event listener
-  useEffect(() => {
-    if (window.ethereum) {
-      // detect Network account change
-      window.ethereum.on('chainChanged', (networkId) => {
-        console.log('chainChanged', networkId)
-        setCurrentNetwork(networkId)
-      })
-    } else {
-      alert('Please install Metamask to use this faucet')
-    }
-  }, [])
+  if (window.ethereum) {
+    // detect Network account change
+    window.ethereum.on('chainChanged', (networkId) => {
+      console.log('chainChanged', networkId)
+      setCurrentNetwork(networkId)
+    })
+  } else {
+    alert('Please install Metamask to use this faucet')
+  }
 
   // checks if correct network when user switches networks
   useEffect(() => {
@@ -62,7 +64,11 @@ function App() {
       </div>
 
       {isCorrectNetwork ? (
-        <CorrectNetwork web3={web3} />
+        <CorrectNetwork
+          web3={web3}
+          faucetContract={faucetContract}
+          tokenContract={tokenContract}
+        />
       ) : (
         <IncorrectNetwork rpcURL={rpcURL} networkId={networkID} />
       )}

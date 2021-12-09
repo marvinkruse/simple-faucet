@@ -33,11 +33,17 @@ p {
   text-align: justify;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+ol {
+  padding: 0 30vw 0 35vw;
+  text-align: left;
+}
+
+#faucet-btn {
+  margin-top: 4vh;
+}
+
+.address-text {
+  width: 40em;
+  text-align: center;
+  padding: 0.25em 0;
 }

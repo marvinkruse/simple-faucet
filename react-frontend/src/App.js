@@ -61,7 +61,11 @@ function App() {
         </p>
       </div>
 
-      {isCorrectNetwork ? <CorrectNetwork /> : <IncorrectNetwork />}
+      {isCorrectNetwork ? (
+        <CorrectNetwork web3={web3} />
+      ) : (
+        <IncorrectNetwork rpcURL={rpcURL} networkId={networkID} />
+      )}
     </div>
   )
 }

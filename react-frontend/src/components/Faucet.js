@@ -43,6 +43,7 @@ const Faucet = (props) => {
           // send request for tokens
           const response = await sendRequest({ account: address })
           console.log(response)
+          await timeout(3000) // 3 second delay
           // if success, update balance and display tx_hash
           if (response.message === 'success')
             setTokenBalance(parseInt(tokenBalance) + 100)
@@ -68,6 +69,10 @@ const Faucet = (props) => {
       // Handle Error Here
       console.error(err)
     }
+  }
+
+  const timeout = (delay) => {
+    return new Promise((res) => setTimeout(res, delay))
   }
 
   return (
@@ -100,7 +105,8 @@ const Faucet = (props) => {
           <h3>Transaction Hash:</h3>
           <a
             href={`https://mumbai.polygonscan.com/tx/${txHash}`}
-            rel="noreferrer"
+            target="_blank"
+            rel="noreferrer noopener"
           >
             {txHash}
           </a>

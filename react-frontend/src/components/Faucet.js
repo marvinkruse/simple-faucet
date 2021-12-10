@@ -32,7 +32,7 @@ const Faucet = (props) => {
     setIsLoading(true)
 
     // first check if the address is valid
-    if (web3.utils.isAddress(address)) {
+    if (await web3.utils.isAddress(address)) {
       // check if they are allowed to withdraw (24 hours)
       const allowedToWithdraw = await faucet.methods
         .allowedToWithdraw(address)
@@ -42,14 +42,16 @@ const Faucet = (props) => {
         try {
           // send request for tokens
           const response = await sendRequest({ account: address })
-          console.log(response)
-          await timeout(3000) // 3 second delay
+          //console.log(response)
+
           // if success, update balance and display tx_hash
-          if (response.message === 'success')
+          if (response.message === 'success') {
+            await timeout(3000)
             setTokenBalance(parseInt(tokenBalance) + 100)
-          setTxHash(response.tx_hash)
+            setTxHash(response.tx_hash)
+          }
         } catch (err) {
-          console.error(err)
+          alert('An error occured, please try again later.')
         }
       } else {
         alert('You have already used this faucet, please try again later.')

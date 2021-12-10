@@ -28,6 +28,7 @@ Before deploying, you need to set environment variables in a `.env` file inside 
 
 - `WALLET_ADDRESS` the address of signer that will be calling the function on the server-side
 - `PRIVATE_KEY` the private key of this wallet address
+- `RPC_URL` the url of the RPC server/node (defaults to `https://matic-mumbai.chainstacklabs.com`)
 - `PORT` the localhost port the server is running on (defaults to 5000)
 
 Once these variables are set in the `.env` file, we can start up the server

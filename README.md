@@ -4,7 +4,7 @@
 
 ## Prerequisites
 
-[Install `npm`](https://nodejs.org/en/download/). Both the front and backend use `npm` as the package manager.
+[Install `npm`](https://nodejs.org/en/download/). (Version v14.18.1 of Node was used for this project) Both the front and backend use `npm` as the package manager.
 
 ## Install Dependancies
 

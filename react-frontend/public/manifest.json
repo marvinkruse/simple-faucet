@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Swan Faucet",
+  "name": "Swan Token Faucet",
   "icons": [
     {
       "src": "favicon.ico",

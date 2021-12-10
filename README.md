@@ -1,6 +1,6 @@
 # Swan Faucet
 
-**Technology Stack:** node + react.js + webpack + web3
+**Technology Stack:** node + react.js + web3
 
 ## Prerequisites
 
@@ -54,5 +54,4 @@ Once these variables are set in the `.env` file, we can start up the webpage on 
 
 - [node.js](https://nodejs.org/en/docs/)
 - [react.js](https://reactjs.org/)
-- [webpack](https://webpack.js.org/concepts/)
 - [web3.js](https://web3js.readthedocs.io/en/v1.5.2/)

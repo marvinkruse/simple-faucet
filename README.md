@@ -1,21 +1,58 @@
 # Swan Faucet
 
-Swan Faucet is minimalistic faucet for ERC20 tokens. It's based on a faucet smart contract that will allow you to withdraw some tokens every 24 hours. The amount of tokens and the waiting period can be defined upon deployment of the smart contract.
+**Technology Stack:** node + react.js + webpack + web3
 
-## Frontend
+## Prerequisites
 
-The front end was built using `npx create-react-app`. It is a simple page with no routes. Inside `App.js`, the faucet owner can set the address of the faucet contract, and the address of the token contract. The ABI of the contracts should also be in `./react-frontend/src/abi`. Finally the owner should set the endpoint of the server that will make the token transfer.
+[Install `npm`](https://nodejs.org/en/download/). Both the front and backend use `npm` as the package manager.
 
-## Backend
+## Install Dependancies
 
-The backend is a simple express `server.js` file with one post route to send Tokens to a provided address. The owner will need to set the `walletAddress` and `privateKey` in this file. This address will be the signer of the send token transaction.
-The request body will have one key: `{"account": <address>}` to transfer the tokens to this address.
+### Backend
 
-## How it works
+- `cd backend`
+- `npm install`
+- `cd ..`
 
-This faucet is deployed on the Polygon Mumbai network. When an address is in the text field, web3 will call `getBalance()` to display the MATIC balance of the address. The ERC-20 token contract will also call `balanceOf()` to display the token balance.
+### Frontend
 
-When the button is clicked, a post request is sent to the backend to transfer 100 tokens to the address. Displaying the transaction hash below.
+- `cd react-frontend`
+- `npm install`
+- `cd ..`
 
-- Start the server `cd backend`, `node server`
-- Start frontend `cd react-frontend`, `yarn start`
+## Deployment Server
+
+### Backend
+
+Before deploying, you need to set environment variables in a `.env` file inside the `backend` directory, an example `.env.example` file is provided
+
+- `WALLET_ADDRESS` the address of signer that will be calling the function on the server-side
+- `PRIVATE_KEY` the private key of this wallet address
+- `PORT` the localhost port the server is running on (defaults to 5000)
+
+Once these variables are set in the `.env` file, we can start up the server
+
+- `cd backend`
+- `node server`
+
+### Frontend
+
+Before deploying, you need to set environment variables in a `.env` file inside the `react-frontend` directory, an example `.env.example` file is provided
+
+- `REACT_APP_SERVER_URL` the endpoint for the server
+
+Once these variables are set in the `.env` file, we can start up the webpage on `localhost:3000`
+
+- `cd react-frontend`
+- `npm start`
+
+## Build Frontend
+
+`npm run build` should build the project. The build artifacts will be stored in the `build/` directory
+
+## Reference Documents
+
+- [node.js](https://nodejs.org/en/docs/)
+- [react.js](https://reactjs.org/)
+- [webpack](https://webpack.js.org/concepts/)
+- [web3.js](https://web3js.readthedocs.io/en/v1.5.2/)

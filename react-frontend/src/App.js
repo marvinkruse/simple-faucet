@@ -3,6 +3,7 @@ import Faucet from './components/Faucet'
 import Web3 from 'web3'
 import faucetABI from './abi/SwanFaucet.json'
 import tokenABI from './abi/USDC.json'
+require('dotenv').config()
 
 function App() {
   //////////////////////////////////////////////////////////////////////////////
@@ -14,7 +15,7 @@ function App() {
   //////////////////////////////////////////////////////////////////////////////
   ////     INSERT THE TOKEN AND FAUCET ADDRESS HERE                       //////
   //////////////////////////////////////////////////////////////////////////////
-  const serverAPI = 'http://localhost:5000/'
+  const serverAPI = process.env.REACT_APP_SERVER_URL
   var token_address = '0xe11A86849d99F524cAC3E7A0Ec1241828e332C62'
   var faucet_address = '0x099e67a3f29B16C6FFCC621f3c7Ddf64eAfBf632'
   //////////////////////////////////////////////////////////////////////////////

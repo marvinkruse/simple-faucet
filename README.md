@@ -1,14 +1,21 @@
 # Swan Faucet
-Swan Faucet is a pretty minimalistic faucet for Ethereum-based ERC20 tokens. It's based on a simple smart contract that will allow you to withdraw some tokens every couple of minutes. The amount of tokens and the waiting period can be defined upon deployment of the smart contract. It works with Metamask in your browser, so it's very easy to use.
 
-## How to use it
-In order to use and deploy this simple faucet, you need to deploy the smart contract and the frontend. To do this follow the tutorial below.
+Swan Faucet is minimalistic faucet for ERC20 tokens. It's based on a faucet smart contract that will allow you to withdraw some tokens every 24 hours. The amount of tokens and the waiting period can be defined upon deployment of the smart contract.
 
-### Smart Contract
-Simply deploy the smart contract onto your chain. You need to specify the erc20 tokens' address in the constructor when deploying. By default the contract allows 100 tokens to be withdrawn every 30 minutes - feel free to change this in the `faucet.sol` smart contract (*line 9+10*).
+## Frontend
 
-### Frontend
-You can simply put the contents of the `frontend` folder onto your preferred webserver (*it's just html and javascript*). In the `faucet.js` file you need to specify the RPC url, the network ID and the minimum gas price as well as the tokens' and the faucets address. Nothing else needs to be changed.
+The front end was built using `npx create-react-app`. It is a simple page with no routes. Inside `App.js`, the faucet owner can set the address of the faucet contract, and the address of the token contract. The ABI of the contracts should also be in `./react-frontend/src/abi`. Finally the owner should set the endpoint of the server that will make the token transfer.
 
-## Feedback, Problems, Suggestions?
-Simple open up an issue in this repositoriy and I'll get back to you as soon as possible. I'm always open to your feedback and ideas on how to improve this faucet.
+## Backend
+
+The backend is a simple express `server.js` file with one post route to send Tokens to a provided address. The owner will need to set the `walletAddress` and `privateKey` in this file. This address will be the signer of the send token transaction.
+The request body will have one key: `{"account": <address>}` to transfer the tokens to this address.
+
+## How it works
+
+This faucet is deployed on the Polygon Mumbai network. When an address is in the text field, web3 will call `getBalance()` to display the MATIC balance of the address. The ERC-20 token contract will also call `balanceOf()` to display the token balance.
+
+When the button is clicked, a post request is sent to the backend to transfer 100 tokens to the address. Displaying the transaction hash below.
+
+- Start the server `cd backend`, `node server`
+- Start frontend `cd react-frontend`, `yarn start`

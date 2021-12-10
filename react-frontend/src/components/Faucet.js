@@ -98,7 +98,10 @@ const Faucet = (props) => {
       {txHash ? (
         <div>
           <h3>Transaction Hash:</h3>
-          <a href={`https://polygonscan.com/tx/${txHash}`} rel="noreferrer">
+          <a
+            href={`https://mumbai.polygonscan.com/tx/${txHash}`}
+            rel="noreferrer"
+          >
             {txHash}
           </a>
         </div>

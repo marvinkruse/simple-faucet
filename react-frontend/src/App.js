@@ -1,5 +1,6 @@
 import './App.css'
 import Faucet from './components/Faucet'
+import Header from './components/Header'
 import Web3 from 'web3'
 import faucetABI from './abi/SwanFaucet.json'
 import tokenABI from './abi/USDC.json'
@@ -28,21 +29,24 @@ function App() {
 
   return (
     <div className="App">
-      <h1>Swan Faucet</h1>
+      <Header />
+      <div className="Content">
+        <h1 className="heading">Request testnet USDC</h1>
 
-      <div id="description">
-        <p id="intro">
-          Get Mumbai USDC for an account on the Mumbai testnet. You can only use
-          this faucet once a day.
-        </p>
+        <div id="description">
+          <p id="intro">
+            Get testnet USDC for an account on one the supported blockchain
+            Polygon Mumbai.
+          </p>
+        </div>
+
+        <Faucet
+          web3={web3}
+          faucetContract={faucetContract}
+          tokenContract={tokenContract}
+          server={serverAPI}
+        />
       </div>
-
-      <Faucet
-        web3={web3}
-        faucetContract={faucetContract}
-        tokenContract={tokenContract}
-        server={serverAPI}
-      />
     </div>
   )
 }

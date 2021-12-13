@@ -47,7 +47,7 @@ const Faucet = (props) => {
           // if success, update balance and display tx_hash
           if (response.message === 'success') {
             await timeout(3000)
-            setTokenBalance(parseInt(tokenBalance) + 100)
+            setTokenBalance(parseFloat(tokenBalance) + 100)
             setTxHash(response.tx_hash)
           }
         } catch (err) {
@@ -90,7 +90,7 @@ const Faucet = (props) => {
       <h2>Your MATIC Balance:</h2>
       <div id="balanceETH">{maticBalance}</div>
 
-      <h2>Your Token Balance:</h2>
+      <h2>Your USDC Balance:</h2>
       <div id="balanceToken">{tokenBalance}</div>
 
       <button

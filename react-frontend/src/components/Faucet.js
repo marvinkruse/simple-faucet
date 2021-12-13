@@ -1,16 +1,19 @@
 import { React, useState } from 'react'
 import axios from 'axios'
 import './Faucet.css'
+import Modal from './Modal'
+import './Modal.css'
 
 const Faucet = (props) => {
   const web3 = props.web3
   const faucet = props.faucetContract // faucet contract
-  const token = props.tokenContract // token contract
+  //const token = props.tokenContract // token contract
   const server = props.server
   const [account, setAccount] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+  const [showModal, setShowModal] = useState(false)
   const [txHash, setTxHash] = useState('')
   const [isValidAddress, setIsValidAddress] = useState(false)
+  const [inProgress, setInProgress] = useState(false)
 
   // whenever the textfield changes, check if it is valid address, then get MATIC and token balance of address
   const handleChange = async (e) => {
@@ -20,8 +23,8 @@ const Faucet = (props) => {
   }
 
   const buttonClicked = async (address) => {
-    setIsLoading(true)
-
+    setInProgress(true)
+    setShowModal(true)
     // first check if the address is valid
     if (await web3.utils.isAddress(address)) {
       // check if they are allowed to withdraw (24 hours)
@@ -33,22 +36,29 @@ const Faucet = (props) => {
         try {
           // send request for tokens
           const response = await sendRequest({ account: address })
+          await timeout(3000)
           //console.log(response)
 
           // if success, update balance and display tx_hash
           if (response.message === 'success') {
-            await timeout(3000)
             //setTokenBalance(parseFloat(tokenBalance) + 100)
             setTxHash(response.tx_hash)
           }
         } catch (err) {
           alert('An error occured, please try again later.')
+
+          setShowModal(false)
         }
       } else {
         alert('You have already used this faucet, please try again later.')
+        setShowModal(false)
       }
+    } else {
+      setInProgress(false)
+      setShowModal(false)
     }
-    setIsLoading(false)
+
+    setInProgress(false)
   }
 
   // send post request to server to send contract method
@@ -87,11 +97,11 @@ const Faucet = (props) => {
             onChange={handleChange}
             placeholder="Ex: 0xA878795d2C93985444f1e2A077FA324d59C759b0"
           />
-          {!isValidAddress && account != '' ? (
+          {!isValidAddress && account !== '' ? (
             <div className="error-div">
               <img className="error-icon" src="error-icon.svg" alt="error! " />
               <div className="error-text">
-                Please enter a vaid ethereum address.
+                Please enter a valid ethereum address.
               </div>
             </div>
           ) : (
@@ -101,7 +111,7 @@ const Faucet = (props) => {
       </div>
       <button
         id="faucet-btn"
-        disabled={isLoading}
+        disabled={showModal}
         onClick={() => buttonClicked(account)}
       >
         Request 100 USDC
@@ -121,45 +131,13 @@ const Faucet = (props) => {
           </a>
         </div>
       </div>
-      {/*
-      <h2>Your Address:</h2>
-      <input
-        className="address-text"
-        type="text"
-        value={account}
-        onChange={handleChange}
+
+      <Modal
+        show={showModal}
+        handleClose={() => setShowModal(false)}
+        inProgress={inProgress}
+        hash={txHash}
       />
-
-      <h2>Your MATIC Balance:</h2>
-      <div id="balanceETH">{maticBalance}</div>
-
-      <h2>Your USDC Balance:</h2>
-      <div id="balanceToken">{tokenBalance}</div>
-
-      <button
-        id="faucet-btn"
-        disabled={isLoading}
-        onClick={() => buttonClicked(account)}
-      >
-        Request 100 Tokens
-      </button>
-
-      {isLoading ? <h3>Sending Tokens...</h3> : <></>}
-      {txHash ? (
-        <div>
-          <h3>Transaction Hash:</h3>
-          <a
-            href={`https://mumbai.polygonscan.com/tx/${txHash}`}
-            target="_blank"
-            rel="noreferrer noopener"
-          >
-            {txHash}
-          </a>
-        </div>
-      ) : (
-        <></>
-      )}
-      */}
     </form>
   )
 }

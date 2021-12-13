@@ -37,6 +37,12 @@
   border: 2px solid #0b318f;
 }
 
+#faucet-btn:disabled {
+  background-color: grey;
+  border: 2px solid grey;
+  color: darkgray;
+}
+
 .network {
   width: 20em;
   height: 2.75em;

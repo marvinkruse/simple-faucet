@@ -1,6 +1,6 @@
 import './Modal.css'
 
-const Modal = ({ handleClose, show, inProgress, hash }) => {
+const Modal = ({ handleClose, show, inProgress, hash, isError }) => {
   const showHideClassName = show ? 'modal display-block' : 'modal display-none'
 
   return (
@@ -11,6 +11,14 @@ const Modal = ({ handleClose, show, inProgress, hash }) => {
             <h1>Transaction initiated</h1>
             <div className="modal-text">
               Sending 100 testnet USDC to your account, please wait a moment.
+            </div>
+          </div>
+        ) : isError ? (
+          <div className="modal-error">
+            <h1>Transaction Error</h1>
+            <div className="modal-text">
+              You have already used this faucet, please try again after 24
+              hours.
             </div>
           </div>
         ) : (

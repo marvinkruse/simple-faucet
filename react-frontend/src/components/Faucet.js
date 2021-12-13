@@ -14,6 +14,7 @@ const Faucet = (props) => {
   const [txHash, setTxHash] = useState('')
   const [isValidAddress, setIsValidAddress] = useState(false)
   const [inProgress, setInProgress] = useState(false)
+  const [isError, setIsError] = useState(false)
 
   // whenever the textfield changes, check if it is valid address, then get MATIC and token balance of address
   const handleChange = async (e) => {
@@ -23,6 +24,7 @@ const Faucet = (props) => {
   }
 
   const buttonClicked = async (address) => {
+    setIsError(false)
     setInProgress(true)
     setShowModal(true)
     // first check if the address is valid
@@ -45,16 +47,12 @@ const Faucet = (props) => {
             setTxHash(response.tx_hash)
           }
         } catch (err) {
-          alert('An error occured, please try again later.')
-
-          setShowModal(false)
+          setIsError(true)
         }
       } else {
-        alert('You have already used this faucet, please try again later.')
-        setShowModal(false)
+        setIsError(true)
       }
     } else {
-      setInProgress(false)
       setShowModal(false)
     }
 
@@ -137,6 +135,7 @@ const Faucet = (props) => {
         handleClose={() => setShowModal(false)}
         inProgress={inProgress}
         hash={txHash}
+        isError={isError}
       />
     </form>
   )

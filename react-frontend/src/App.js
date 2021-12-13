@@ -35,8 +35,8 @@ function App() {
 
         <div id="description">
           <p id="intro">
-            Get testnet USDC for an account on one the supported blockchain
-            Polygon Mumbai.
+            Get testnet USDC for an account on the supported blockchain Polygon
+            Mumbai.
           </p>
         </div>
 

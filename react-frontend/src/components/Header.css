@@ -1,0 +1,29 @@
+#header {
+  margin: 0;
+  padding: 0;
+  border-bottom: solid 1px whitesmoke;
+
+  display: flex;
+  background-color: white;
+  min-width: 100vw;
+}
+
+#header-logo {
+  height: 50px;
+  padding: 20px;
+  padding-left: 50px;
+  padding-right: 0;
+}
+
+.divider {
+  font-size: 32px;
+  margin-top: 22px;
+  font-weight: 200;
+  color: lightgrey;
+}
+
+#faucet-text {
+  margin: 34px 15px;
+  font-size: 19px;
+  font-weight: 500;
+}

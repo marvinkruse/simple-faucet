@@ -1,0 +1,86 @@
+#faucet {
+  border: 1px solid lightgrey;
+  border-radius: 5px;
+  padding: 20px;
+  background-color: white;
+}
+
+.faucet-inputs {
+  padding-top: 5px;
+  display: flex;
+  flex-direction: row;
+  gap: 2em;
+}
+
+.network-label,
+.address-label {
+  font-weight: 600;
+  font-size: 14px;
+  padding: 5px 0 15px 0;
+}
+
+#faucet-btn {
+  margin: 2em 0;
+  height: 3em;
+  width: 15em;
+  padding: 0.25em 1.5em;
+  background-color: royalblue;
+  color: white;
+
+  font-weight: 700;
+  border-radius: 5px;
+  border: 2px solid royalblue;
+}
+
+#faucet-btn:hover {
+  background-color: #0b318f;
+  border: 2px solid #0b318f;
+}
+
+.network {
+  width: 20em;
+  height: 2.75em;
+
+  display: flex;
+  padding: 0.25em 1.5em;
+}
+
+.polygon-logo {
+  height: 15px;
+  margin: 0 10px;
+}
+
+.address-text {
+  height: 2em;
+  width: 30em;
+  padding: 0.25em 1.5em;
+}
+
+.error-div {
+  display: flex;
+  margin-top: 10px;
+}
+.error-icon {
+  height: 15px;
+}
+
+.error-text {
+  padding-left: 0.5em;
+  color: grey;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.help-div {
+  display: flex;
+}
+
+.help-icon {
+  height: 20px;
+}
+
+.help-text {
+  padding-left: 1em;
+  color: grey;
+  font-weight: 500;
+}

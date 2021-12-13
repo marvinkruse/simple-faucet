@@ -1,5 +1,6 @@
 import { React, useState } from 'react'
 import axios from 'axios'
+import './Faucet.css'
 
 const Faucet = (props) => {
   const web3 = props.web3
@@ -7,25 +8,15 @@ const Faucet = (props) => {
   const token = props.tokenContract // token contract
   const server = props.server
   const [account, setAccount] = useState('')
-  const [maticBalance, setMaticBalance] = useState(0)
-  const [tokenBalance, setTokenBalance] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const [txHash, setTxHash] = useState('')
+  const [isValidAddress, setIsValidAddress] = useState(false)
 
   // whenever the textfield changes, check if it is valid address, then get MATIC and token balance of address
   const handleChange = async (e) => {
     const address = e.target.value
     setAccount(address)
-    if (web3.utils.isAddress(address)) {
-      const matic = await web3.eth.getBalance(address)
-      setMaticBalance(web3.utils.fromWei(matic, 'ether'))
-
-      const tokens = await token.methods.balanceOf(address).call()
-      setTokenBalance(web3.utils.fromWei(tokens, 'ether'))
-    } else {
-      setMaticBalance(0)
-      setTokenBalance(0)
-    }
+    setIsValidAddress(await web3.utils.isAddress(address))
   }
 
   const buttonClicked = async (address) => {
@@ -47,7 +38,7 @@ const Faucet = (props) => {
           // if success, update balance and display tx_hash
           if (response.message === 'success') {
             await timeout(3000)
-            setTokenBalance(parseFloat(tokenBalance) + 100)
+            //setTokenBalance(parseFloat(tokenBalance) + 100)
             setTxHash(response.tx_hash)
           }
         } catch (err) {
@@ -78,7 +69,59 @@ const Faucet = (props) => {
   }
 
   return (
-    <div id="faucet">
+    <form id="faucet">
+      <div className="faucet-inputs">
+        <div className="faucet-network">
+          <div className="network-label">Network</div>
+          <select className="network" name="network">
+            <option value="mumbai">Polygon Mumbai</option>
+          </select>
+        </div>
+
+        <div className="faucet-address">
+          <div className="address-label">Testnet account address</div>
+          <input
+            className="address-text"
+            type="text"
+            value={account}
+            onChange={handleChange}
+            placeholder="Ex: 0xA878795d2C93985444f1e2A077FA324d59C759b0"
+          />
+          {!isValidAddress && account != '' ? (
+            <div className="error-div">
+              <img className="error-icon" src="error-icon.svg" alt="error! " />
+              <div className="error-text">
+                Please enter a vaid ethereum address.
+              </div>
+            </div>
+          ) : (
+            <></>
+          )}
+        </div>
+      </div>
+      <button
+        id="faucet-btn"
+        disabled={isLoading}
+        onClick={() => buttonClicked(account)}
+      >
+        Request 100 USDC
+      </button>
+
+      <div className="help-div">
+        <img className="help-icon" src="question.svg" alt="need help?" />
+        <div className="help-text">
+          Need more testnet MATIC? Get MATIC from{' '}
+          <a
+            className="mumbai-faucet-link"
+            href="https://faucet.polygon.technology"
+            target="_blank"
+            rel="noreferrer noopener"
+          >
+            Polygon Mumbai Faucet
+          </a>
+        </div>
+      </div>
+      {/*
       <h2>Your Address:</h2>
       <input
         className="address-text"
@@ -116,7 +159,8 @@ const Faucet = (props) => {
       ) : (
         <></>
       )}
-    </div>
+      */}
+    </form>
   )
 }
 

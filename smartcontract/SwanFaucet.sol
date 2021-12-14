@@ -5,7 +5,6 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 interface ERC20 {
     function transfer(address to, uint256 value) external returns (bool);
-    event Transfer(address indexed from, address indexed to, uint256 value);
 
     function balanceOf(address _address) external view returns (uint256);
 }
@@ -42,7 +41,7 @@ contract SwanFaucet is OwnableUpgradeable {
         return false;
     }
 
-    function sendTokensTo(address _address) public {
+    function sendTokensTo(address _address) onlyAdmin public {
         require(allowedToWithdraw(msg.sender), "please wait 24 hours");
         nextAccessTime[_address] = block.timestamp + waitTime;
 
@@ -70,8 +69,9 @@ contract SwanFaucet is OwnableUpgradeable {
         nextAccessTime[_address] = block.timestamp + waitTime;
 
         for(uint i=0; i<_tokenAddresses.length; i++) {
-            require(tokenAmounts[i] <= ERC20(_tokenAddresses[i]).balanceOf(address(this)));
-            ERC20(_tokenAddresses[i]).transfer(_address, tokenAmounts[i]);
+            if (tokenAmounts[i] <= ERC20(_tokenAddresses[i]).balanceOf(address(this))) {
+                ERC20(_tokenAddresses[i]).transfer(_address, tokenAmounts[i]);
+            }
         }
     }
 

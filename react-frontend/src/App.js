@@ -1,6 +1,7 @@
 import './App.css'
 import Faucet from './components/Faucet'
 import Header from './components/Header'
+import Footer from './components/Footer'
 import Web3 from 'web3'
 import faucetABI from './abi/SwanFaucet.json'
 import tokenABI from './abi/USDC.json'
@@ -46,6 +47,8 @@ function App() {
           tokenContract={tokenContract}
           server={serverAPI}
         />
+
+        <Footer />
       </div>
     </div>
   )

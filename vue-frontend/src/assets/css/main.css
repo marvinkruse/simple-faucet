@@ -1,0 +1,150 @@
+
+@font-face {
+  font-family: 'Open-Sans';
+  src: url('../font/Open-Sans-2.ttf') format('truetype');
+} 
+
+* {
+  margin: 0;
+  padding: 0;
+}
+html,
+body,
+#app,
+.wrapper {
+    width: 100%;
+    background-color: #fff;
+    font-size: 116px;
+}
+/* .wrapper{
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  overflow-x: hidden;
+  overflow-y: scroll;
+} */
+
+body {
+    font-family: "Helvetica Neue", Helvetica, "microsoft yahei", arial, STHeiTi, sans-serif;
+    /* font-family: 'Open-Sans'; */
+    min-height: 100%;
+    /* overflow: hidden; */
+    /* overflow-y: scroll; */
+  }
+
+body::-webkit-scrollbar-track {
+    background: #f7f7f7;
+}
+body::-webkit-scrollbar {
+    width: 6px;
+    background: #ccc;
+}
+body::-webkit-scrollbar-thumb {
+    background: #ccc;
+}
+
+a {
+    text-decoration: none
+}
+
+.pcShow{
+    display: block;
+}
+.mobileShow{
+    display: none;
+}
+
+
+.move-enter-active,
+.move-leave-active {
+    transition: opacity .5s;
+}
+
+.move-enter,
+.move-leave {
+    opacity: 0;
+}
+
+.el-menu--popup{
+  background-color: #fff !important;
+}
+.el-menu--popup .el-menu-item{
+  background-color: #fff !important;
+  color: #101c4f !important;
+}
+
+.el-message .el-icon-success{
+    font-size: 35px;
+}
+
+.landing{
+    width: 16.6rem;
+    max-width: 100%;
+    margin: auto;
+    overflow: hidden;
+}
+
+.breadth{
+    width: 100%;
+    max-width: 1440px;
+    margin: auto;
+}
+
+@media screen and (max-width:1800px){
+  html,
+  body,
+  #app,
+  .wrapper {
+      font-size: 110px;
+  }
+  .landing{
+      width: 16rem;
+  }
+}
+
+@media screen and (max-width:1600px){
+  html,
+  body,
+  #app,
+  .wrapper {
+      font-size: 100px;
+  }
+}
+
+@media screen and (max-width:1260px){
+  html,
+  body,
+  #app,
+  .wrapper {
+      font-size: 80px;
+  }
+}
+
+@media screen and (max-width:1024px){
+  html,
+  body,
+  #app,
+  .wrapper {
+      font-size: 70px;
+  }
+}
+
+@media screen and (max-width:768px){
+  html,
+  body,
+  #app,
+  .wrapper {
+      font-size: 55px;
+  }
+}
+
+@media screen and (max-width:640px){
+    html,
+    body,
+    #app,
+    .wrapper {
+        font-size: 42px;
+    }
+}

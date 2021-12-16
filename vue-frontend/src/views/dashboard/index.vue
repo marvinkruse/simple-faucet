@@ -130,7 +130,6 @@ export default {
         //     Code: ${error.code}. Data: ${error.data}`
         //     );
         // });
-        
     },
     methods: {
         async onSubmit() {
@@ -150,7 +149,7 @@ export default {
                             _this.amount_tip = false
                             _this.txhash = response.tx_hash
                             _this.active = 3
-                            _this.ruleForm.usdcBalance = parseFloat(_this.ruleForm.usdcBalance) + 100
+                            _this.ethChange()
                         }
                     } catch (err) {
                         console.log('allowedToWithdraw err:', err)
@@ -184,15 +183,28 @@ export default {
             let _this = this
             if (_this.$web3.utils.isAddress(_this.ruleForm.address)) {
                 const matic = await _this.$web3.eth.getBalance(_this.ruleForm.address)
-                // console.log('matic:', matic)
-                // console.log(_this.$web3.utils.fromWei(matic, 'ether'))
                 _this.ruleForm.maticBalance = _this.$web3.utils.fromWei(matic, 'ether')
 
                 const tokens = await _this.$tokenContract.methods.balanceOf(_this.ruleForm.address).call()
-                // console.log('usdc:', tokens)
-                // console.log(_this.$web3.utils.fromWei(tokens, 'ether'))
-                _this.ruleForm.usdcBalance = _this.$web3.utils.fromWei(tokens, 'ether')
-                
+                const decimal = await _this.$tokenContract.methods.decimals().call()
+                // console.log('decimal:', decimal)
+                // console.log('usdc:', tokens, _this.$web3.utils.fromWei(tokens, 'ether'))
+
+                if(tokens.length>decimal) {
+                    _this.ruleForm.usdcBalance = tokens.slice(tokens.length-decimal) > 0?
+                        tokens.slice(0, tokens.length-decimal).concat(`.`, tokens.slice(tokens.length-decimal).replace(/(0+)\b/gi,""))
+                        :
+                        tokens.slice(0, tokens.length-decimal)
+                }else if(tokens === '0') {
+                    _this.ruleForm.usdcBalance = '0'
+                }else {
+                    let odd = ''
+                    for(let i = 0; i < decimal - tokens.length; i++){
+                        odd += '0'
+                    }
+                    _this.ruleForm.usdcBalance = '0.' + String(odd + tokens).replace(/(0+)\b/gi,"")
+                }
+
                 _this.ruleForm.address_tip = false
                 _this.ruleForm.amount_tip = true
             }else if(_this.ruleForm.address == ''){

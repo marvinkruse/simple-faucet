@@ -30,7 +30,7 @@ Vue.config.productionTip = false
 
 import Web3 from 'web3'
 import faucetABI from './abi/SwanFaucet.json'
-import tokenABI from './abi/USDC.json'
+import tokenABI from './abi/ERC20.json'
 const contractWeb3 = new Web3(process.env.BASE_NETWORK)
 contractWeb3.setProvider(process.env.BASE_NETWORK);
 Vue.prototype.$web3 = contractWeb3;

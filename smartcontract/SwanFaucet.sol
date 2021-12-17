@@ -22,6 +22,7 @@ contract SwanFaucet is OwnableUpgradeable {
     function initialize(address _admin) public initializer {
         require(_admin != address(0));
         isAdmin[_admin] = true;
+        __Ownable_init();
     }
 
     function allowedToWithdraw(address _address) public view returns (bool) {

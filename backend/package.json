@@ -2,7 +2,7 @@
   "name": "server",
   "version": "1.0.0",
   "description": "",
-  "main": "server.js",
+  "main": "mumbai-server.js",
   "dependencies": {
     "dotenv": "^10.0.0",
     "ethereumjs-tx": "^2.1.2",
@@ -12,7 +12,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node mumbai-server.js"
   },
   "author": "",
   "license": "ISC"

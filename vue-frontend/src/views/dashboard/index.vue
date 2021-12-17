@@ -190,21 +190,8 @@ export default {
                 // console.log('decimal:', decimal)
                 // console.log('usdc:', tokens, _this.$web3.utils.fromWei(tokens, 'ether'))
 
-                if(tokens.length>decimal) {
-                    _this.ruleForm.usdcBalance = tokens.slice(tokens.length-decimal) > 0?
-                        tokens.slice(0, tokens.length-decimal).concat(`.`, tokens.slice(tokens.length-decimal).replace(/(0+)\b/gi,""))
-                        :
-                        tokens.slice(0, tokens.length-decimal)
-                }else if(tokens === '0') {
-                    _this.ruleForm.usdcBalance = '0'
-                }else {
-                    let odd = ''
-                    for(let i = 0; i < decimal - tokens.length; i++){
-                        odd += '0'
-                    }
-                    _this.ruleForm.usdcBalance = '0.' + String(odd + tokens).replace(/(0+)\b/gi,"")
-                }
-
+                await _this.formatWithDecimal(tokens, decimal)
+                
                 _this.ruleForm.address_tip = false
                 _this.ruleForm.amount_tip = true
             }else if(_this.ruleForm.address == ''){
@@ -213,6 +200,24 @@ export default {
             } else {
                 _this.ruleForm.address_tip = true
                 _this.ruleForm.amount_tip = false
+            }
+        },
+        formatWithDecimal(value, decimal) {
+            let _this = this
+            let tokens = value
+            if(tokens.length>decimal) {
+                _this.ruleForm.usdcBalance = tokens.slice(tokens.length-decimal) > 0?
+                    tokens.slice(0, tokens.length-decimal).concat(`.`, tokens.slice(tokens.length-decimal).replace(/(0+)\b/gi,""))
+                    :
+                    tokens.slice(0, tokens.length-decimal)
+            }else if(tokens === '0') {
+                _this.ruleForm.usdcBalance = '0'
+            }else {
+                let odd = ''
+                for(let i = 0; i < decimal - tokens.length; i++){
+                    odd += '0'
+                }
+                _this.ruleForm.usdcBalance = '0.' + String(odd + tokens).replace(/(0+)\b/gi,"")
             }
         }
     },

@@ -21,12 +21,22 @@ const faucetInterface = [
   {
     inputs: [
       {
+        internalType: 'address[]',
+        name: '_tokenAddresses',
+        type: 'address[]',
+      },
+      {
+        internalType: 'uint256[]',
+        name: '_tokenAmounts',
+        type: 'uint256[]',
+      },
+      {
         internalType: 'address',
         name: '_address',
         type: 'address',
       },
     ],
-    name: 'sendTokensTo',
+    name: 'sendMultiTokens',
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function',

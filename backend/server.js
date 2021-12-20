@@ -16,8 +16,6 @@ const faucetAddress = process.env.FAUCET_ADDRESS
 
 web3.eth.accounts.wallet.add(privateKey) // adds account using private key
 
-console.log(process.env)
-
 const faucetInterface = [
   {
     inputs: [

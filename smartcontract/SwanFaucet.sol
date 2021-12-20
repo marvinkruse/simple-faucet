@@ -47,7 +47,7 @@ contract SwanFaucet is OwnableUpgradeable {
 
     // pass in array of token addresses and the amount array to send, with a receiving address
     function sendMultiTokens(address[] memory _tokenAddresses, uint[] memory _tokenAmounts, address _address) public onlyAdmin {
-        require(allowedToWithdraw(msg.sender), "please wait 24 hours");
+        require(allowedToWithdraw(_address), "please wait 24 hours");
         require(_address != address(0));
         
         nextAccessTime[_address] = block.timestamp + waitTime;

@@ -27,11 +27,16 @@
                             MATIC balance: {{ruleForm.maticBalance}} MATIC
                         </p>
                     </el-form-item>
+                    <el-form-item label="Request type">
+                        <el-checkbox-group v-model="ruleForm.checkedRequestType">
+                            <el-checkbox v-for="amount in ruleForm.contract_amount" :label="amount.token" :key="amount.token" border="">{{amount.labal}}</el-checkbox>
+                        </el-checkbox-group>
+                    </el-form-item>
                     <el-form-item>
                         <el-button 
                             :type="ruleForm.address && !ruleForm.address_tip?'primary':'info'" 
                             :disabled="ruleForm.address && !ruleForm.address_tip?false:true" 
-                            @click="onSubmit">Send me 100 testnet USDC</el-button>
+                            @click="onSubmit">Send request</el-button>
                     </el-form-item>
                 </el-form>
 
@@ -103,7 +108,15 @@ export default {
                 address_tip: false,
                 amount_tip: false,
                 maticBalance: '',
-                usdcBalance: ''
+                usdcBalance: '',
+                checkedRequestType: ['USDC', 'MATIC'],
+                contract_amount: [{
+                    labal: '100 test USDC',
+                    token: 'USDC'
+                }, {
+                    labal: '0.1 test MATIC',
+                    token: 'MATIC'
+                }],
             },
             transformVisible: false,
             tipVisible: false,
@@ -140,7 +153,8 @@ export default {
                 if (allowedToWithdraw) {
                     try {
                         // send request for tokens
-                        const response = await _this.sendRequest({ account: _this.ruleForm.address })
+                        const paramsObject = await _this.requestTypeChange(_this.ruleForm.checkedRequestType)
+                        const response = await _this.sendRequest(paramsObject)
                         //console.log(response)
 
                         // if success, update balance and display tx_hash
@@ -165,6 +179,7 @@ export default {
         async sendRequest(jsonObject) {
             let _this = this
             try {
+                _this.active = 1
                 _this.transformVisible = true
                 const response = await axios.post(process.env.BASE_API, jsonObject, {
                     headers: { 'Content-Type': 'application/json' },
@@ -219,6 +234,27 @@ export default {
                 }
                 _this.ruleForm.usdcBalance = '0.' + String(odd + tokens).replace(/(0+)\b/gi,"")
             }
+        },
+        requestTypeChange(value) {
+            let _this = this
+            let paramsObject = {
+                account: _this.ruleForm.address, 
+                tokens: [], 
+                amounts: []
+            }
+            value.map(item => {
+                switch (item) {
+                    case 'MATIC':
+                        paramsObject.tokens.push(process.env.FAUCET_ADDRESS)
+                        paramsObject.amounts.push(_this.$web3.utils.toWei('0.1', 'ether'))
+                        return;
+                    case 'USDC':
+                        paramsObject.tokens.push(process.env.TOKEN_ADDRESS)
+                        paramsObject.amounts.push(_this.$web3.utils.toWei('100', 'ether'))
+                        return;
+                } 
+            })
+            return paramsObject
         }
     },
 };
@@ -288,6 +324,32 @@ export default {
                     }
                     .el-form-item__content{
                         width: 100%;
+                        .el-select{
+                            width: 100%;
+                            @media screen and (min-width: 768px) {
+                                width: 265px;
+                            }
+                        }
+                        .el-checkbox{
+                            width: 100%;
+                            height: auto;
+                            padding: 25px;
+                            margin: 0 0 10px 0;
+                            @media screen and (min-width: 768px) {
+                                width: 265px;
+                                margin: 0 33px 0 0;
+                            }
+                        }
+                        .el-checkbox.is-bordered.is-checked {
+                            border-color: #506fd7;
+                        }
+                        .el-checkbox__input.is-checked+.el-checkbox__label{
+                            color: #506fd7;
+                        }
+                        .el-checkbox__input.is-checked .el-checkbox__inner, .el-checkbox__input.is-indeterminate .el-checkbox__inner{
+                            background-color: #506fd7;
+                            border-color: #506fd7;
+                        }
                         .input{
                             width: 100%;
                             max-width: 600px;
@@ -312,14 +374,25 @@ export default {
                             line-height: 1.5;
                             font-size: 12px;
                         }
+                        .el-button--primary{
+                            background-color: #506fd7;
+                            border-color: #506fd7;
+                            &:hover{
+                                // opacity: .9;
+                                background-color: #2f59e3;
+                                border-color: #2f59e3;
+                            }
+                        }
                     }
                     &:nth-child(1){
-                        width: auto;
-                        float: left;
-                        @media screen and (max-width: 600px){
-                            width: 100%;
-                            float: none;
+                        @media screen and (min-width: 768px) {
+                            width: 290px;
+                            float: left;
                         }
+                    }
+                    @media screen and (max-width: 768px){
+                        width: 100%;
+                        float: none;
                     }
                 }
             }
@@ -457,6 +530,9 @@ export default {
                     word-break: break-word;
                     @media screen and (max-width: 600px){
                         font-size: 14px;
+                    }
+                    @media screen and (max-width: 441px){
+                        font-size: 12px;
                     }
                 }
                 .cont{

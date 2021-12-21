@@ -118,15 +118,18 @@ const checkFaucetBalance = async (tokenAddresses, tokenAmounts) => {
 
     // if there is not enough tokens in faucet or if the tokenAmount is too large
     if (
-      parseFloat(faucetBalance) < parseFloat(tokenAmounts[i]) ||
-      parseFloat(tokenAmounts[i]) > parseFloat(tokenObject.maxAmount)
+      web3.utils.toBN(faucetBalance) < web3.utils.toBN(tokenAmounts[i]) ||
+      web3.utils.toBN(tokenAmounts[i]) > web3.utils.toBN(tokenObject.maxAmount)
     ) {
       // change the token status
       addressStatus.result = -1
       addressStatus.err = `running out of ${tokenObject.name} tokens`
 
       // change err message if token amount is too large
-      if (parseFloat(tokenAmounts[i]) > parseFloat(tokenObject.maxAmount))
+      if (
+        web3.utils.toBN(tokenAmounts[i]) >
+        web3.utils.toBN(tokenObject.maxAmount)
+      )
         addressStatus.err = 'exceeding maximum amount'
 
       // remove from array

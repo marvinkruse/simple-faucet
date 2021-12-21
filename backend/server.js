@@ -12,12 +12,10 @@ const web3 = new Web3(
 const port = process.env.PORT || 5000
 const walletAddress = process.env.WALLET_ADDRESS
 const privateKey = process.env.PRIVATE_KEY
+const faucetAddress = process.env.FAUCET_ADDRESS
 
 web3.eth.accounts.wallet.add(privateKey) // adds account using private key
 
-//const faucetAddress = '0x099e67a3f29B16C6FFCC621f3c7Ddf64eAfBf632' // old faucet
-const faucetAddress = process.env.FAUCET_ADDRESS
-//const faucetAddress = '0x03ab3412db32c99c21f3499c3fca497948756c70' //test faucet
 const faucetInterface = [
   {
     inputs: [

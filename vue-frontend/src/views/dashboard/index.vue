@@ -27,11 +27,11 @@
                             MATIC balance: {{ruleForm.maticBalance}} MATIC
                         </p>
                     </el-form-item>
-                    <el-form-item label="Request type">
+                    <!-- <el-form-item label="Request type">
                         <el-checkbox-group v-model="ruleForm.checkedRequestType">
-                            <el-checkbox v-for="amount in ruleForm.contract_amount" :label="amount.token" :key="amount.token" border="">{{amount.labal}}</el-checkbox>
+                            <el-checkbox v-for="amount in ruleForm.contract_amount" :label="amount.token" :key="amount.token" border disabled>{{amount.labal}}</el-checkbox>
                         </el-checkbox-group>
-                    </el-form-item>
+                    </el-form-item> -->
                     <el-form-item>
                         <el-button 
                             :type="ruleForm.address && !ruleForm.address_tip?'primary':'info'" 
@@ -59,30 +59,45 @@
             <el-steps :active="active" align-center>
                 <el-step title="Enter address" icon="el-icon-success"></el-step>
                 <el-step title="Transaction initiated" :icon="active == 1?'el-icon-loading':'el-icon-success'"></el-step>
-                <el-step title="Confirmation" :icon="active == 3?'el-icon-success':''"></el-step>
+                <el-step title="Waiting for confirmation" :icon="active == 2?'el-icon-loading':active < 2?'':'el-icon-success'"></el-step>
+                <el-step title="Token transferred" :icon="active > 3?'el-icon-success':''"></el-step>
             </el-steps>
             <div class="trans_cont" v-if="active == 1">
                 <h1>Transaction initiated</h1>
-                <h4>Sending 100 testnet USDC to your account, please wait a moment.</h4>
+                <h4>Sending 100 testnet USDC and 0.05 testnet MATIC to your account, please wait a moment.</h4>
             </div>
-            <div class="trans_cont" v-if="active > 1">
-                <h1>Request complete</h1>
-                <h4>Congratulations, 100 testnet USDC was sent to your account.</h4>
+            <div class="trans_cont" v-else-if="active == 2">
+                <h1>Waiting for confirmation</h1>
+                <h4>Transactions have been initiated. Waiting for confirmation.</h4>
                 <div class="cont">
                     <div>
                         <span>Request type</span>
                         Transaction hash
                     </div>
                     <div>
-                        <span>100 testnet USDC</span>
+                        <span>100 testnet USDC <br /> 0.05 testnet MATIC</span>
+                        <a :href="'https://mumbai.polygonscan.com/tx/'+txhash" rel="noopener noreferrer" target="_blank">{{txhash}}</a>
+                    </div>
+                </div>
+            </div>
+            <div class="trans_cont" v-else-if="active > 2">
+                <h1>Request complete</h1>
+                <h4>Congratulations, 100 testnet USDC and 0.05 testnet MATIC was sent to your account.</h4>
+                <div class="cont">
+                    <div>
+                        <span>Request type</span>
+                        Transaction hash
+                    </div>
+                    <div>
+                        <span>100 testnet USDC <br /> 0.05 testnet MATIC</span>
                         <a :href="'https://mumbai.polygonscan.com/tx/'+txhash" rel="noopener noreferrer" target="_blank">{{txhash}}</a>
                     </div>
                 </div>
             </div>
             <div slot="footer" class="dialog-footer">
                 <el-button 
-                    :type="active > 2?'primary':'info'" 
-                    :disabled="active > 2?false:true"
+                    :type="active > 3?'primary':'info'" 
+                    :disabled="active > 3?false:true"
                     @click="transformVisible = false">Close</el-button>
             </div>
         </el-dialog>
@@ -114,7 +129,7 @@ export default {
                     labal: '100 test USDC',
                     token: 'USDC'
                 }, {
-                    labal: '0.1 test MATIC',
+                    labal: '0.05 test MATIC',
                     token: 'MATIC'
                 }],
             },
@@ -131,19 +146,7 @@ export default {
         $route: function (to, from) {
         }
     },
-    mounted() {
-        // ethereum
-        // .request({ method: 'eth_accounts' })
-        // .then((accounts) => {
-        //     console.log(`Accounts:\n${accounts.join('\n')}`);
-        // })
-        // .catch((error) => {
-        //     console.error(
-        //     `Error fetching accounts: ${error.message}.
-        //     Code: ${error.code}. Data: ${error.data}`
-        //     );
-        // });
-    },
+    mounted() {},
     methods: {
         async onSubmit() {
             let _this = this
@@ -153,17 +156,22 @@ export default {
                 if (allowedToWithdraw) {
                     try {
                         // send request for tokens
-                        const paramsObject = await _this.requestTypeChange(_this.ruleForm.checkedRequestType)
+                        const paramsObject = {
+                            account: _this.ruleForm.address, 
+                            tokens: [process.env.TOKEN_ADDRESS, process.env.MATIC_TOKEN_ADDRESS], 
+                            amounts: [_this.$web3.utils.toWei('100', 'ether'), _this.$web3.utils.toWei('0.05', 'ether')]
+                        }
                         const response = await _this.sendRequest(paramsObject)
                         //console.log(response)
 
                         // if success, update balance and display tx_hash
                         if (response.message === 'success') {
-                            await _this.timeout(3000)
+                            // await _this.timeout(3000)
                             _this.amount_tip = false
                             _this.txhash = response.tx_hash
-                            _this.active = 3
+                            _this.active = 2
                             _this.ethChange()
+                            _this.checkTransaction(response.tx_hash)
                         }
                     } catch (err) {
                         console.log('allowedToWithdraw err:', err)
@@ -235,26 +243,21 @@ export default {
                 _this.ruleForm.usdcBalance = '0.' + String(odd + tokens).replace(/(0+)\b/gi,"")
             }
         },
-        requestTypeChange(value) {
+        checkTransaction(txhash) {
             let _this = this
-            let paramsObject = {
-                account: _this.ruleForm.address, 
-                tokens: [], 
-                amounts: []
-            }
-            value.map(item => {
-                switch (item) {
-                    case 'MATIC':
-                        paramsObject.tokens.push(process.env.FAUCET_ADDRESS)
-                        paramsObject.amounts.push(_this.$web3.utils.toWei('0.1', 'ether'))
-                        return;
-                    case 'USDC':
-                        paramsObject.tokens.push(process.env.TOKEN_ADDRESS)
-                        paramsObject.amounts.push(_this.$web3.utils.toWei('100', 'ether'))
-                        return;
-                } 
-            })
-            return paramsObject
+            _this.$web3.eth.getTransactionReceipt(txhash).then(
+                async (receipt) => {
+                    console.log('checking ... ');
+                    await _this.timeout(2000)
+                    if (!receipt) { 
+                        _this.checkTransaction(txhash)
+                    }
+                    else {
+                        _this.active = 4
+                    }
+                },
+                err => { console.error(err); }
+            );
         }
     },
 };
@@ -459,6 +462,11 @@ export default {
                     .el-step__title{
                         font-size: 12px;
                         line-height: 2;
+                        word-break: break-word;
+                        @media screen and (max-width: 600px){
+                            margin-bottom: 10px;
+                            line-height: 1.3;
+                        }
                     }
                     .el-step__icon{
                         width: auto;
@@ -488,10 +496,11 @@ export default {
                             left: 0;
                         }
                     }
-                    &:nth-child(2){
+                    &:nth-child(2), &:nth-child(3){
                         text-align: center;
                     }
-                    &:nth-child(3){
+                    
+                    &:nth-child(4){
                         .el-step__head, .el-step__main{
                             text-align: right;
                         }

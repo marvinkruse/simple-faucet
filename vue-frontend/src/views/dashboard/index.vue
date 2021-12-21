@@ -27,11 +27,11 @@
                             MATIC balance: {{ruleForm.maticBalance}} MATIC
                         </p>
                     </el-form-item>
-                    <!-- <el-form-item label="Request type">
+                    <el-form-item label="Request type">
                         <el-checkbox-group v-model="ruleForm.checkedRequestType">
                             <el-checkbox v-for="amount in ruleForm.contract_amount" :label="amount.token" :key="amount.token" border disabled>{{amount.labal}}</el-checkbox>
                         </el-checkbox-group>
-                    </el-form-item> -->
+                    </el-form-item>
                     <el-form-item>
                         <el-button 
                             :type="ruleForm.address && !ruleForm.address_tip?'primary':'info'" 
@@ -345,6 +345,7 @@ export default {
                         }
                         .el-checkbox.is-bordered.is-checked {
                             border-color: #506fd7;
+                            background-color: rgba(80, 111, 215, 0.05);
                         }
                         .el-checkbox__input.is-checked+.el-checkbox__label{
                             color: #506fd7;
@@ -352,6 +353,7 @@ export default {
                         .el-checkbox__input.is-checked .el-checkbox__inner, .el-checkbox__input.is-indeterminate .el-checkbox__inner{
                             background-color: #506fd7;
                             border-color: #506fd7;
+                            display: none;
                         }
                         .input{
                             width: 100%;

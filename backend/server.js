@@ -115,7 +115,7 @@ app.listen(port, () => {
   console.log(`Faucet server listening at http://localhost:${port}`)
 })
 
-// return array of status objects for each token address and filter arrays for available tokens only
+// return object { status, eligibleTokens, eligibleAmounts }
 const checkFaucetStatus = async (tokenAddresses, tokenAmounts, address) => {
   let faucetStatus = []
   let eligibleTokens = []
@@ -125,53 +125,57 @@ const checkFaucetStatus = async (tokenAddresses, tokenAmounts, address) => {
     .allowedToWithdraw(address)
     .call()
 
-  for (let i = 0; i < tokenAddresses.length; i++) {
-    let faucetBalance = 0
-    let addressStatus = { address: tokenAddresses[i], result: 0 }
+  // if user is not allowed to withdraw, dont need to run for loop
+  if (!allowedToWithdraw) {
+    faucetStatus = tokenAddresses.map((tokenAddress) => {
+      return { address: tokenAddress, result: -1, err: 'please wait 24 hrs' }
+    })
+  } else {
+    for (let i = 0; i < tokenAddresses.length; i++) {
+      let faucetBalance = 0
+      let addressStatus = { address: tokenAddresses[i], result: 0 }
 
-    // get faucet balance
-    if (tokenAddresses[i] == '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE') {
-      faucetBalance = await web3.eth.getBalance(faucetAddress) // get MATIC balance
-    } else {
-      let tokenContract = new web3.eth.Contract(
-        tokenInterface,
-        tokenAddresses[i],
-      )
-      faucetBalance = await tokenContract.methods
-        .balanceOf(faucetAddress)
-        .call()
-    }
+      // get faucet balance
+      if (tokenAddresses[i] == '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE') {
+        faucetBalance = await web3.eth.getBalance(faucetAddress) // get MATIC balance
+      } else {
+        let tokenContract = new web3.eth.Contract(
+          tokenInterface,
+          tokenAddresses[i],
+        )
+        faucetBalance = await tokenContract.methods
+          .balanceOf(faucetAddress)
+          .call()
+      }
 
-    // get token max amount
-    const tokenObject = tokenConfig.filter((tokenObject) => {
-      return tokenObject.tokenAddress == tokenAddresses[i]
-    })[0]
+      // get token max amount
+      const tokenObject = tokenConfig.filter((tokenObject) => {
+        return tokenObject.tokenAddress == tokenAddresses[i]
+      })[0]
 
-    // if there is an err (tokenAmount too large, not enough token balance) set err message
-    if (
-      web3.utils.toBN(faucetBalance) < web3.utils.toBN(tokenAmounts[i]) ||
-      web3.utils.toBN(tokenAmounts[i]) >
-        web3.utils.toBN(tokenObject.maxAmount) ||
-      !allowedToWithdraw
-    ) {
-      // change the token status
-      addressStatus.result = -1
-      addressStatus.err = `running out of ${tokenObject.name} tokens`
-
-      // change err message if token amount is too large
+      // if there is an err (tokenAmount too large, not enough token balance) set err message
       if (
+        web3.utils.toBN(faucetBalance) < web3.utils.toBN(tokenAmounts[i]) ||
         web3.utils.toBN(tokenAmounts[i]) >
-        web3.utils.toBN(tokenObject.maxAmount)
-      )
-        addressStatus.err = 'exceeding maximum amount'
+          web3.utils.toBN(tokenObject.maxAmount)
+      ) {
+        // change the token status
+        addressStatus.result = -1
+        addressStatus.err = `running out of ${tokenObject.name} tokens`
 
-      if (!allowedToWithdraw) addressStatus.err = 'please wait 24 hours'
-    } else {
-      eligibleTokens.push(tokenAddresses[i])
-      eligibleAmounts.push(tokenAmounts[i])
+        // change err message if token amount is too large
+        if (
+          web3.utils.toBN(tokenAmounts[i]) >
+          web3.utils.toBN(tokenObject.maxAmount)
+        )
+          addressStatus.err = 'exceeding maximum amount'
+      } else {
+        eligibleTokens.push(tokenAddresses[i])
+        eligibleAmounts.push(tokenAmounts[i])
+      }
+
+      faucetStatus.push(addressStatus)
     }
-
-    faucetStatus.push(addressStatus)
   }
 
   return { faucetStatus, eligibleTokens, eligibleAmounts }

@@ -41,6 +41,25 @@ const faucetInterface = [
     stateMutability: 'nonpayable',
     type: 'function',
   },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: '_address',
+        type: 'address',
+      },
+    ],
+    name: 'allowedToWithdraw',
+    outputs: [
+      {
+        internalType: 'bool',
+        name: '',
+        type: 'bool',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
 ]
 const tokenInterface = [
   {
@@ -70,20 +89,26 @@ app.post('/', async (req, res) => {
   )
 
   // get faucet balance status, also remove addressese from array
-  const faucetStatus = await checkFaucetBalance(tokenAddresses, tokenAmounts)
+  const faucetStatus = await checkFaucetStatus(
+    tokenAddresses,
+    tokenAmounts,
+    checkSumAddress,
+  )
 
-  try {
-    const transaction = await faucetContract.methods
-      .sendMultiTokens(tokenAddresses, tokenAmounts, checkSumAddress)
-      .send({ gas: 9999999 })
+  if (tokenAddresses.length > 0) {
+    try {
+      const transaction = await faucetContract.methods
+        .sendMultiTokens(tokenAddresses, tokenAmounts, checkSumAddress)
+        .send({ gas: 9999999 })
 
-    console.log(transaction.transactionHash)
+      console.log(transaction.transactionHash)
 
-    res.json([...faucetStatus, { tx_hash: transaction.transactionHash }])
-  } catch (err) {
-    console.log(err)
-    res.status(500).json(err)
-  }
+      res.json([...faucetStatus, { tx_hash: transaction.transactionHash }])
+    } catch (err) {
+      console.log(err)
+      res.status(500).json(err)
+    }
+  } else res.json(faucetStatus)
 })
 
 app.listen(port, () => {
@@ -91,8 +116,14 @@ app.listen(port, () => {
 })
 
 // return array of status objects for each token address and filter arrays for available tokens only
-const checkFaucetBalance = async (tokenAddresses, tokenAmounts) => {
+const checkFaucetStatus = async (tokenAddresses, tokenAmounts, address) => {
   let status = []
+
+  const allowedToWithdraw = await faucetContract.methods
+    .allowedToWithdraw(address)
+    .call()
+
+  console.log(allowedToWithdraw)
 
   for (let i = 0; i < tokenAddresses.length; i++) {
     let faucetBalance = 0
@@ -119,7 +150,9 @@ const checkFaucetBalance = async (tokenAddresses, tokenAmounts) => {
     // if there is not enough tokens in faucet or if the tokenAmount is too large
     if (
       web3.utils.toBN(faucetBalance) < web3.utils.toBN(tokenAmounts[i]) ||
-      web3.utils.toBN(tokenAmounts[i]) > web3.utils.toBN(tokenObject.maxAmount)
+      web3.utils.toBN(tokenAmounts[i]) >
+        web3.utils.toBN(tokenObject.maxAmount) ||
+      !allowedToWithdraw
     ) {
       // change the token status
       addressStatus.result = -1
@@ -131,6 +164,8 @@ const checkFaucetBalance = async (tokenAddresses, tokenAmounts) => {
         web3.utils.toBN(tokenObject.maxAmount)
       )
         addressStatus.err = 'exceeding maximum amount'
+
+      if (!allowedToWithdraw) addressStatus.err = 'please wait 24 hours'
 
       // remove from array
       tokenAddresses.splice(i, 1)

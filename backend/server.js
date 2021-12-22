@@ -2,6 +2,7 @@ const express = require('express')
 const parser = require('body-parser')
 const cors = require('cors')
 const Web3 = require('web3')
+const tokenConfig = require('./tokenConfig')
 require('dotenv').config()
 
 const web3 = new Web3(
@@ -110,11 +111,26 @@ const checkFaucetBalance = async (tokenAddresses, tokenAmounts) => {
         .call()
     }
 
-    // if there is not enough tokens in faucet
-    if (parseFloat(faucetBalance) < parseFloat(tokenAmounts[i])) {
+    // get token max amount
+    const tokenObject = tokenConfig.filter((tokenObject) => {
+      return tokenObject.tokenAddress == tokenAddresses[i]
+    })[0]
+
+    // if there is not enough tokens in faucet or if the tokenAmount is too large
+    if (
+      web3.utils.toBN(faucetBalance) < web3.utils.toBN(tokenAmounts[i]) ||
+      web3.utils.toBN(tokenAmounts[i]) > web3.utils.toBN(tokenObject.maxAmount)
+    ) {
       // change the token status
       addressStatus.result = -1
-      addressStatus.err = 'running out of tokens'
+      addressStatus.err = `running out of ${tokenObject.name} tokens`
+
+      // change err message if token amount is too large
+      if (
+        web3.utils.toBN(tokenAmounts[i]) >
+        web3.utils.toBN(tokenObject.maxAmount)
+      )
+        addressStatus.err = 'exceeding maximum amount'
 
       // remove from array
       tokenAddresses.splice(i, 1)

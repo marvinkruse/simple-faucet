@@ -33,9 +33,14 @@
                         </el-checkbox-group>
                     </el-form-item>
                     <el-form-item>
+                        <div class="recaptcha">
+                            <google-recaptcha ref="recaptcha" @getValidateCode='getValidateCode' v-model="validateCode"></google-recaptcha>
+                        </div>
+                    </el-form-item>
+                    <el-form-item>
                         <el-button 
-                            :type="ruleForm.address && !ruleForm.address_tip?'primary':'info'" 
-                            :disabled="ruleForm.address && !ruleForm.address_tip?false:true" 
+                            :type="ruleForm.address && !ruleForm.address_tip && isNext?'primary':'info'" 
+                            :disabled="ruleForm.address && !ruleForm.address_tip && isNext?false:true" 
                             @click="onSubmit">Send request</el-button>
                     </el-form-item>
                 </el-form>
@@ -94,6 +99,11 @@
                     </div>
                 </div>
             </div>
+            <el-alert v-if="responseErr.length>0" type="error" center :closable="false">
+                <template slot="title">
+                    <span v-for="name in responseErr" :key="name" style="display: block;">{{name}}</span>
+                </template>
+            </el-alert>
             <div slot="footer" class="dialog-footer">
                 <el-button 
                     :type="active > 3?'primary':'info'" 
@@ -113,6 +123,7 @@
 
 <script>
 import axios from 'axios'
+import GoogleRecaptcha from '@/components/GoogleRecaptcha'
 export default {
     data() {
         return {
@@ -137,10 +148,13 @@ export default {
             tipVisible: false,
             tipIndex: 1,
             active: 1,
-            txhash: ''
+            txhash: '',
+            validateCode: false,
+            isNext: false,
+            responseErr: []
         };
     },
-    components: {},
+    components: {GoogleRecaptcha},
     computed: {},
     watch: {
         $route: function (to, from) {
@@ -165,22 +179,23 @@ export default {
                         //console.log(response)
 
                         // if success, update balance and display tx_hash
-                        if (response.message === 'success') {
-                            // await _this.timeout(3000)
+                        _this.responseErr = []
+                        if (response) {
+                            await response.map(res => {
+                                if(res.result && res.result === -1) _this.responseErr.push(res.err)
+                                if(res.tx_hash) _this.txhash = res.tx_hash
+                            })
                             _this.amount_tip = false
-                            _this.txhash = response.tx_hash
                             _this.active = 2
                             _this.ethChange()
-                            _this.checkTransaction(response.tx_hash)
+                            _this.checkTransaction(_this.txhash)
                         }
                     } catch (err) {
                         console.log('allowedToWithdraw err:', err)
-                        _this.tipIndex = 2
-                        _this.tipVisible = true
+                        _this.errPopupWindow(2, true, false)
                     }
                 } else {
-                    _this.tipIndex = 1
-                    _this.tipVisible = true
+                    _this.errPopupWindow(1, true, false)
                 }
             }
         },
@@ -195,7 +210,7 @@ export default {
                 return response.data
             } catch (err) {
                 // Handle Error Here
-                _this.transformVisible = false
+                _this.errPopupWindow(2, true, false)
                 console.error(err)
             }
         },
@@ -245,6 +260,10 @@ export default {
         },
         checkTransaction(txhash) {
             let _this = this
+            if(!txhash) {
+                _this.errPopupWindow(2, true, false)
+                return false
+            }
             _this.$web3.eth.getTransactionReceipt(txhash).then(
                 async (receipt) => {
                     console.log('checking ... ');
@@ -258,6 +277,15 @@ export default {
                 },
                 err => { console.error(err); }
             );
+        },
+        errPopupWindow(index, tips, popup) {
+            this.tipIndex = index
+            this.tipVisible = tips
+            this.transformVisible = popup
+        },
+        getValidateCode(value) {
+            // console.log('google recaptcha:', value);
+            this.isNext = value
         }
     },
 };
@@ -387,6 +415,13 @@ export default {
                                 background-color: #2f59e3;
                                 border-color: #2f59e3;
                             }
+                        }
+                        .recaptcha{
+                            margin: 5px 0px;
+                            width: 304px;
+                            height: 78px;
+                            background-color: rgb(249, 249, 249);
+                            border-radius: 2px;
                         }
                     }
                     &:nth-child(1){

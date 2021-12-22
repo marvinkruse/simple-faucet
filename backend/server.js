@@ -89,16 +89,16 @@ app.post('/', async (req, res) => {
   )
 
   // get faucet balance status, also remove addressese from array
-  const faucetStatus = await checkFaucetStatus(
-    tokenAddresses,
-    tokenAmounts,
-    checkSumAddress,
-  )
+  const {
+    faucetStatus,
+    eligibleTokens,
+    eligibleAmounts,
+  } = await checkFaucetStatus(tokenAddresses, tokenAmounts, checkSumAddress)
 
-  if (tokenAddresses.length > 0) {
+  if (eligibleTokens.length > 0) {
     try {
       const transaction = await faucetContract.methods
-        .sendMultiTokens(tokenAddresses, tokenAmounts, checkSumAddress)
+        .sendMultiTokens(eligibleTokens, eligibleAmounts, checkSumAddress)
         .send({ gas: 9999999 })
 
       console.log(transaction.transactionHash)
@@ -117,13 +117,13 @@ app.listen(port, () => {
 
 // return array of status objects for each token address and filter arrays for available tokens only
 const checkFaucetStatus = async (tokenAddresses, tokenAmounts, address) => {
-  let status = []
+  let faucetStatus = []
+  let eligibleTokens = []
+  let eligibleAmounts = []
 
   const allowedToWithdraw = await faucetContract.methods
     .allowedToWithdraw(address)
     .call()
-
-  console.log(allowedToWithdraw)
 
   for (let i = 0; i < tokenAddresses.length; i++) {
     let faucetBalance = 0
@@ -147,7 +147,7 @@ const checkFaucetStatus = async (tokenAddresses, tokenAmounts, address) => {
       return tokenObject.tokenAddress == tokenAddresses[i]
     })[0]
 
-    // if there is not enough tokens in faucet or if the tokenAmount is too large
+    // if there is an err (tokenAmount too large, not enough token balance) set err message
     if (
       web3.utils.toBN(faucetBalance) < web3.utils.toBN(tokenAmounts[i]) ||
       web3.utils.toBN(tokenAmounts[i]) >
@@ -166,15 +166,13 @@ const checkFaucetStatus = async (tokenAddresses, tokenAmounts, address) => {
         addressStatus.err = 'exceeding maximum amount'
 
       if (!allowedToWithdraw) addressStatus.err = 'please wait 24 hours'
-
-      // remove from array
-      tokenAddresses.splice(i, 1)
-      tokenAmounts.splice(i, 1)
-      i--
+    } else {
+      eligibleTokens.push(tokenAddresses[i])
+      eligibleAmounts.push(tokenAmounts[i])
     }
 
-    status.push(addressStatus)
+    faucetStatus.push(addressStatus)
   }
 
-  return status
+  return { faucetStatus, eligibleTokens, eligibleAmounts }
 }

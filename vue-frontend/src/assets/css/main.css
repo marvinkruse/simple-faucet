@@ -25,7 +25,9 @@ body,
   overflow-x: hidden;
   overflow-y: scroll;
 } */
-
+.grecaptcha-logo{
+    display: flex;
+}
 body {
     font-family: "Helvetica Neue", Helvetica, "microsoft yahei", arial, STHeiTi, sans-serif;
     /* font-family: 'Open-Sans'; */

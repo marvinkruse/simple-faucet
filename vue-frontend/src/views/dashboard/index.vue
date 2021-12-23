@@ -33,11 +33,6 @@
                         </el-checkbox-group>
                     </el-form-item>
                     <el-form-item>
-                        <div class="recaptcha">
-                            <google-recaptcha ref="recaptcha" @getValidateCode='getValidateCode' v-model="validateCode"></google-recaptcha>
-                        </div>
-                    </el-form-item>
-                    <el-form-item>
                         <el-button 
                             :type="ruleForm.address && !ruleForm.address_tip && isNext?'primary':'info'" 
                             :disabled="ruleForm.address && !ruleForm.address_tip && isNext?false:true" 
@@ -122,8 +117,8 @@
 </template>
 
 <script>
+let _this
 import axios from 'axios'
-import GoogleRecaptcha from '@/components/GoogleRecaptcha'
 export default {
     data() {
         return {
@@ -149,21 +144,22 @@ export default {
             tipIndex: 1,
             active: 1,
             txhash: '',
-            validateCode: false,
             isNext: false,
             responseErr: []
         };
     },
-    components: {GoogleRecaptcha},
+    components: {},
     computed: {},
     watch: {
         $route: function (to, from) {
         }
     },
-    mounted() {},
+    mounted() {
+        _this = this
+        _this.getValidateCode()
+    },
     methods: {
         async onSubmit() {
-            let _this = this
             if (_this.$web3.utils.isAddress(_this.ruleForm.address)) {
                 const allowedToWithdraw = await _this.$faucetContract.methods.allowedToWithdraw(_this.ruleForm.address).call()
                 
@@ -181,7 +177,7 @@ export default {
                         // if success, update balance and display tx_hash
                         _this.responseErr = []
                         if (response) {
-                            await response.map(res => {
+                            await response.forEach(res => {
                                 if(res.result && res.result === -1) _this.responseErr.push(res.err)
                                 if(res.tx_hash) _this.txhash = res.tx_hash
                             })
@@ -200,7 +196,6 @@ export default {
             }
         },
         async sendRequest(jsonObject) {
-            let _this = this
             try {
                 _this.active = 1
                 _this.transformVisible = true
@@ -218,7 +213,6 @@ export default {
             return new Promise((res) => setTimeout(res, delay))
         },
         async ethChange() {
-            let _this = this
             if (_this.$web3.utils.isAddress(_this.ruleForm.address)) {
                 const matic = await _this.$web3.eth.getBalance(_this.ruleForm.address)
                 _this.ruleForm.maticBalance = _this.$web3.utils.fromWei(matic, 'ether')
@@ -241,7 +235,6 @@ export default {
             }
         },
         formatWithDecimal(value, decimal) {
-            let _this = this
             let tokens = value
             if(tokens.length>decimal) {
                 _this.ruleForm.usdcBalance = tokens.slice(tokens.length-decimal) > 0?
@@ -259,11 +252,6 @@ export default {
             }
         },
         checkTransaction(txhash) {
-            let _this = this
-            if(!txhash) {
-                _this.errPopupWindow(2, true, false)
-                return false
-            }
             _this.$web3.eth.getTransactionReceipt(txhash).then(
                 async (receipt) => {
                     console.log('checking ... ');
@@ -275,7 +263,10 @@ export default {
                         _this.active = 4
                     }
                 },
-                err => { console.error(err); }
+                err => { 
+                    console.error(err); 
+                    _this.errPopupWindow(2, true, false)
+                }
             );
         },
         errPopupWindow(index, tips, popup) {
@@ -283,9 +274,15 @@ export default {
             this.tipVisible = tips
             this.transformVisible = popup
         },
-        getValidateCode(value) {
-            // console.log('google recaptcha:', value);
-            this.isNext = value
+        async getValidateCode() {
+            await _this.timeout(1000)
+            grecaptcha.enterprise.ready(() => {
+                grecaptcha.enterprise.execute('6Lehor4dAAAAAHNq6VO5G9MNmPyLDCKoMpBnvRAC', {action: 'login'}).then((token) => {
+                    // console.log(token);
+                    _this.isNext = token.length > 0 ? true : false
+                });
+
+            });
         }
     },
 };

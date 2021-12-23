@@ -155,9 +155,10 @@ const checkFaucetStatus = async (tokenAddresses, tokenAmounts, address) => {
 
       // if there is an err (tokenAmount too large, not enough token balance) set err message
       if (
-        web3.utils.toBN(faucetBalance) < web3.utils.toBN(tokenAmounts[i]) ||
-        web3.utils.toBN(tokenAmounts[i]) >
-          web3.utils.toBN(tokenObject.maxAmount)
+        web3.utils.toBN(faucetBalance).lt(web3.utils.toBN(tokenAmounts[i])) ||
+        web3.utils
+          .toBN(tokenAmounts[i])
+          .gt(web3.utils.toBN(tokenObject.maxAmount))
       ) {
         // change the token status
         addressStatus.result = -1
@@ -165,8 +166,9 @@ const checkFaucetStatus = async (tokenAddresses, tokenAmounts, address) => {
 
         // change err message if token amount is too large
         if (
-          web3.utils.toBN(tokenAmounts[i]) >
-          web3.utils.toBN(tokenObject.maxAmount)
+          web3.utils
+            .toBN(tokenAmounts[i])
+            .gt(web3.utils.toBN(tokenObject.maxAmount))
         )
           addressStatus.err = 'exceeding maximum amount'
       } else {

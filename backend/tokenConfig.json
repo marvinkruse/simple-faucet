@@ -1,7 +1,7 @@
 [
   {
     "tokenAddress": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
-    "maxAmount": "100000000000000000",
+    "maxAmount": "500000000000000000",
     "name": "MATIC"
   },
   {

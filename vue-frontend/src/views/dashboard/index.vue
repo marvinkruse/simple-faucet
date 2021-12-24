@@ -82,7 +82,7 @@
             </div>
             <div class="trans_cont" v-else-if="active > 2">
                 <h1>Request complete</h1>
-                <h4>Congratulations, 100 testnet USDC and 0.05 testnet MATIC was sent to your account.</h4>
+                <h4>Congratulations, {{currencyResults}} was sent to your account.</h4>
                 <div class="cont">
                     <div>
                         <span>Request type</span>
@@ -96,7 +96,7 @@
             </div>
             <el-alert v-if="responseErr.length>0" type="error" center :closable="false">
                 <template slot="title">
-                    <span v-for="name in responseErr" :key="name" style="display: block;">{{name}}</span>
+                    <span v-for="(name, index) in responseErr" :key="index" style="display: block;">{{name}}</span>
                 </template>
             </el-alert>
             <div slot="footer" class="dialog-footer">
@@ -112,6 +112,9 @@
             custom-class="transTip" :close-on-click-modal="false" :close-on-press-escape="false" center>
             <div class="tip" v-if="tipIndex == 1">You have already used this faucet, please try again after 24 hours.</div>
             <div class="tip" v-else-if="tipIndex == 2">An error occured, please try again later.</div>
+            <div class="tip" v-else-if="tipIndex == 3">
+                <span v-for="(name, index) in responseErr" :key="index" style="display: block;">{{name}}</span>
+            </div>
         </el-dialog>
     </div>
 </template>
@@ -145,7 +148,8 @@ export default {
             active: 1,
             txhash: '',
             isNext: false,
-            responseErr: []
+            responseErr: [],
+            currencyResults: ''
         };
     },
     components: {},
@@ -160,6 +164,8 @@ export default {
     },
     methods: {
         async onSubmit() {
+            _this.responseErr = []
+            _this.tx_hash = ''
             if (_this.$web3.utils.isAddress(_this.ruleForm.address)) {
                 const allowedToWithdraw = await _this.$faucetContract.methods.allowedToWithdraw(_this.ruleForm.address).call()
                 
@@ -175,12 +181,12 @@ export default {
                         //console.log(response)
 
                         // if success, update balance and display tx_hash
-                        _this.responseErr = []
                         if (response) {
-                            await response.forEach(res => {
-                                if(res.result && res.result === -1) _this.responseErr.push(res.err)
-                                if(res.tx_hash) _this.txhash = res.tx_hash
-                            })
+                            await _this.resultProcess(response)
+                            if(!_this.txhash) {
+                                _this.errPopupWindow(3, true, false)
+                                return false
+                            }
                             _this.amount_tip = false
                             _this.active = 2
                             _this.ethChange()
@@ -194,6 +200,27 @@ export default {
                     _this.errPopupWindow(1, true, false)
                 }
             }
+        },
+        resultProcess(response) {
+            let currency = []
+            response.forEach(res => {
+                switch(res.result){
+                    case 0:
+                        if(res.address === process.env.TOKEN_ADDRESS) {
+                            currency.push('100 testnet USDC')
+                        }else {
+                            currency.push('0.05 testnet MATIC')
+                        }
+                        break;
+                    case -1:
+                        if(_this.responseErr.indexOf(res.err) === -1) _this.responseErr.push(res.err)
+                        break;
+                    default:
+                        if(res.tx_hash) _this.txhash = res.tx_hash
+                        break;
+                }
+            })
+            _this.currencyResults = currency.join(" and ")
         },
         async sendRequest(jsonObject) {
             try {
@@ -275,9 +302,14 @@ export default {
             this.transformVisible = popup
         },
         async getValidateCode() {
+            //www.google.com / www.recaptcha.net
+            var script = document.createElement("script");
+            script.src =
+            `https://www.google.com/recaptcha/enterprise.js?render=${process.env.GOOGLE_KEY}`;
+            document.head.appendChild(script);
             await _this.timeout(1000)
             grecaptcha.enterprise.ready(() => {
-                grecaptcha.enterprise.execute('6Lehor4dAAAAAHNq6VO5G9MNmPyLDCKoMpBnvRAC', {action: 'login'}).then((token) => {
+                grecaptcha.enterprise.execute(process.env.GOOGLE_KEY, {action: 'login'}).then((token) => {
                     // console.log(token);
                     _this.isNext = token.length > 0 ? true : false
                 });

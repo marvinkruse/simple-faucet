@@ -2,19 +2,36 @@
 
 **Technology Stack:** node + react.js + web3
 
-## Prerequisites
+## Docker install
+### Prerequisites
+#### Install Docker Compose
+https://docs.docker.com/compose/install/
+### start docker
+
+```bash
+docker-compose up
+```
+You can check the service at:
+
+http://127.0.0.1:8080
+
+http://172.21.0.2:8080
+
+##
+### Prerequisites
 
 [Install `npm`](https://nodejs.org/en/download/). (Version v14.18.1 of Node was used for this project) Both the front and backend use `npm` as the package manager.
 
-## Install Dependancies
 
-### Backend
+### Install Dependencies
+
+#### Backend
 
 - `cd backend`
 - `npm install`
 - `cd ..`
 
-### Frontend
+#### Frontend
 
 - `cd react-frontend`
 - `npm install`

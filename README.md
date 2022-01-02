@@ -1,16 +1,25 @@
 # Swan Faucet
 
+Swan Faucet is a pretty minimalistic faucet for Ethereum-based ERC20 tokens. It's based on a simple smart contract
+that will allow you to withdraw some tokens every couple of minutes. The amount of tokens and the waiting period can be
+defined upon deployment of the smart contract. 
+
 **Technology Stack:** node + react.js + web3
 
 ## Container Installation
-RRunning  Swan Faucet as a container is the recommended way of using it.
+
+Running Swan Faucet as a container is the recommended way of using it.
 
 ### Prerequisites
+
 #### Install Docker Compose
+
 https://docs.docker.com/compose/install/
 
 ### Environment
-Before deploying, you need to set environment variables in a `.env` file inside the `backend` directory, an example `.env.example` file is provided
+
+Before deploying, you need to set environment variables in a `.env` file inside the `backend` directory, an
+example `.env.example` file is provided
 
 - `WALLET_ADDRESS` the address of signer that will be calling the function on the server-side
 - `PRIVATE_KEY` the private key of this wallet address
@@ -18,11 +27,13 @@ Before deploying, you need to set environment variables in a `.env` file inside 
 - `PORT` the localhost port the server is running on (defaults to 5000)
 
 ### Stable
+
 Run the following command to run the latest stable image of Swan Faucet
 
 ```bash
 docker-compose up
 ```
+
 You can check the service at:
 
 http://127.0.0.1:8080
@@ -30,10 +41,11 @@ http://127.0.0.1:8080
 http://172.21.0.2:8080
 
 ## Install from Source
+
 ### Prerequisites
 
-[Install `npm`](https://nodejs.org/en/download/). (Version v14.18.1 of Node was used for this project) Both the front and backend use `npm` as the package manager.
-
+[Install `npm`](https://nodejs.org/en/download/). (Version v14.18.1 of Node was used for this project) Both the front
+and backend use `npm` as the package manager.
 
 ### Install Dependencies
 
@@ -53,7 +65,8 @@ http://172.21.0.2:8080
 
 #### Backend
 
-Before deploying, you need to set environment variables in a `.env` file inside the `backend` directory, an example `.env.example` file is provided
+Before deploying, you need to set environment variables in a `.env` file inside the `backend` directory, an
+example `.env.example` file is provided
 
 - `WALLET_ADDRESS` the address of signer that will be calling the function on the server-side
 - `PRIVATE_KEY` the private key of this wallet address
@@ -67,7 +80,8 @@ Once these variables are set in the `.env` file, we can start up the server
 
 #### Frontend
 
-Before deploying, you need to set environment variables in a `.env` file inside the `react-frontend` directory, an example `.env.example` file is provided
+Before deploying, you need to set environment variables in a `.env` file inside the `react-frontend` directory, an
+example `.env.example` file is provided
 
 - `REACT_APP_SERVER_URL` the endpoint for the server
 

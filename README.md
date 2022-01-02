@@ -2,11 +2,23 @@
 
 **Technology Stack:** node + react.js + web3
 
-## Docker install
+## Container Installation
+RRunning  Swan Faucet as a container is the recommended way of using it.
+
 ### Prerequisites
 #### Install Docker Compose
 https://docs.docker.com/compose/install/
-### start docker
+
+### Environment
+Before deploying, you need to set environment variables in a `.env` file inside the `backend` directory, an example `.env.example` file is provided
+
+- `WALLET_ADDRESS` the address of signer that will be calling the function on the server-side
+- `PRIVATE_KEY` the private key of this wallet address
+- `RPC_URL` the url of the RPC server/node (defaults to `https://matic-mumbai.chainstacklabs.com`)
+- `PORT` the localhost port the server is running on (defaults to 5000)
+
+### Stable
+Run the following command to run the latest stable image of Swan Faucet
 
 ```bash
 docker-compose up
@@ -17,7 +29,7 @@ http://127.0.0.1:8080
 
 http://172.21.0.2:8080
 
-##
+## Install from Source
 ### Prerequisites
 
 [Install `npm`](https://nodejs.org/en/download/). (Version v14.18.1 of Node was used for this project) Both the front and backend use `npm` as the package manager.
@@ -37,9 +49,9 @@ http://172.21.0.2:8080
 - `npm install`
 - `cd ..`
 
-## Deployment Server
+### Deployment Server
 
-### Backend
+#### Backend
 
 Before deploying, you need to set environment variables in a `.env` file inside the `backend` directory, an example `.env.example` file is provided
 
@@ -53,7 +65,7 @@ Once these variables are set in the `.env` file, we can start up the server
 - `cd backend`
 - `node server`
 
-### Frontend
+#### Frontend
 
 Before deploying, you need to set environment variables in a `.env` file inside the `react-frontend` directory, an example `.env.example` file is provided
 
@@ -64,7 +76,7 @@ Once these variables are set in the `.env` file, we can start up the webpage on 
 - `cd react-frontend`
 - `npm start`
 
-## Build Frontend
+### Build Frontend
 
 `npm run build` should build the project. The build artifacts will be stored in the `build/` directory
 

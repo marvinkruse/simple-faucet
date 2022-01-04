@@ -27,11 +27,16 @@
                             MATIC balance: {{ruleForm.maticBalance}} MATIC
                         </p>
                     </el-form-item>
+                    <el-form-item label="Request type">
+                        <el-checkbox-group v-model="ruleForm.checkedRequestType">
+                            <el-checkbox v-for="amount in ruleForm.contract_amount" :label="amount.token" :key="amount.token" border disabled>{{amount.labal}}</el-checkbox>
+                        </el-checkbox-group>
+                    </el-form-item>
                     <el-form-item>
                         <el-button 
-                            :type="ruleForm.address && !ruleForm.address_tip?'primary':'info'" 
-                            :disabled="ruleForm.address && !ruleForm.address_tip?false:true" 
-                            @click="onSubmit">Send me 100 testnet USDC</el-button>
+                            :type="ruleForm.address && !ruleForm.address_tip && isNext?'primary':'info'" 
+                            :disabled="ruleForm.address && !ruleForm.address_tip && isNext?false:true" 
+                            @click="onSubmit">Send request</el-button>
                     </el-form-item>
                 </el-form>
 
@@ -54,30 +59,50 @@
             <el-steps :active="active" align-center>
                 <el-step title="Enter address" icon="el-icon-success"></el-step>
                 <el-step title="Transaction initiated" :icon="active == 1?'el-icon-loading':'el-icon-success'"></el-step>
-                <el-step title="Confirmation" :icon="active == 3?'el-icon-success':''"></el-step>
+                <el-step title="Waiting for confirmation" :icon="active == 2?'el-icon-loading':active < 2?'':'el-icon-success'"></el-step>
+                <el-step title="Token transferred" :icon="active > 3?'el-icon-success':''"></el-step>
             </el-steps>
             <div class="trans_cont" v-if="active == 1">
                 <h1>Transaction initiated</h1>
-                <h4>Sending 100 testnet USDC to your account, please wait a moment.</h4>
+                <h4>Sending 100 testnet USDC and 0.05 testnet MATIC to your account, please wait a moment.</h4>
             </div>
-            <div class="trans_cont" v-if="active > 1">
-                <h1>Request complete</h1>
-                <h4>Congratulations, 100 testnet USDC was sent to your account.</h4>
+            <div class="trans_cont" v-else-if="active == 2">
+                <h1>Waiting for confirmation</h1>
+                <h4>Transactions have been initiated. Waiting for confirmation.</h4>
                 <div class="cont">
                     <div>
                         <span>Request type</span>
                         Transaction hash
                     </div>
                     <div>
-                        <span>100 testnet USDC</span>
+                        <span>100 testnet USDC <br /> 0.05 testnet MATIC</span>
                         <a :href="'https://mumbai.polygonscan.com/tx/'+txhash" rel="noopener noreferrer" target="_blank">{{txhash}}</a>
                     </div>
                 </div>
             </div>
+            <div class="trans_cont" v-else-if="active > 2">
+                <h1>Request complete</h1>
+                <h4>Congratulations, {{currencyResults}} was sent to your account.</h4>
+                <div class="cont">
+                    <div>
+                        <span>Request type</span>
+                        Transaction hash
+                    </div>
+                    <div>
+                        <span>100 testnet USDC <br /> 0.05 testnet MATIC</span>
+                        <a :href="'https://mumbai.polygonscan.com/tx/'+txhash" rel="noopener noreferrer" target="_blank">{{txhash}}</a>
+                    </div>
+                </div>
+            </div>
+            <el-alert v-if="responseErr.length>0" type="error" center :closable="false">
+                <template slot="title">
+                    <span v-for="(name, index) in responseErr" :key="index" style="display: block;">{{name}}</span>
+                </template>
+            </el-alert>
             <div slot="footer" class="dialog-footer">
                 <el-button 
-                    :type="active > 2?'primary':'info'" 
-                    :disabled="active > 2?false:true"
+                    :type="active > 3?'primary':'info'" 
+                    :disabled="active > 3?false:true"
                     @click="transformVisible = false">Close</el-button>
             </div>
         </el-dialog>
@@ -87,11 +112,15 @@
             custom-class="transTip" :close-on-click-modal="false" :close-on-press-escape="false" center>
             <div class="tip" v-if="tipIndex == 1">You have already used this faucet, please try again after 24 hours.</div>
             <div class="tip" v-else-if="tipIndex == 2">An error occured, please try again later.</div>
+            <div class="tip" v-else-if="tipIndex == 3">
+                <span v-for="(name, index) in responseErr" :key="index" style="display: block;">{{name}}</span>
+            </div>
         </el-dialog>
     </div>
 </template>
 
 <script>
+let _this
 import axios from 'axios'
 export default {
     data() {
@@ -103,13 +132,24 @@ export default {
                 address_tip: false,
                 amount_tip: false,
                 maticBalance: '',
-                usdcBalance: ''
+                usdcBalance: '',
+                checkedRequestType: ['USDC', 'MATIC'],
+                contract_amount: [{
+                    labal: '100 test USDC',
+                    token: 'USDC'
+                }, {
+                    labal: '0.05 test MATIC',
+                    token: 'MATIC'
+                }],
             },
             transformVisible: false,
             tipVisible: false,
             tipIndex: 1,
             active: 1,
-            txhash: ''
+            txhash: '',
+            isNext: false,
+            responseErr: [],
+            currencyResults: ''
         };
     },
     components: {},
@@ -119,52 +159,72 @@ export default {
         }
     },
     mounted() {
-        // ethereum
-        // .request({ method: 'eth_accounts' })
-        // .then((accounts) => {
-        //     console.log(`Accounts:\n${accounts.join('\n')}`);
-        // })
-        // .catch((error) => {
-        //     console.error(
-        //     `Error fetching accounts: ${error.message}.
-        //     Code: ${error.code}. Data: ${error.data}`
-        //     );
-        // });
+        _this = this
+        _this.getValidateCode()
     },
     methods: {
         async onSubmit() {
-            let _this = this
+            _this.responseErr = []
+            _this.tx_hash = ''
             if (_this.$web3.utils.isAddress(_this.ruleForm.address)) {
                 const allowedToWithdraw = await _this.$faucetContract.methods.allowedToWithdraw(_this.ruleForm.address).call()
                 
                 if (allowedToWithdraw) {
                     try {
                         // send request for tokens
-                        const response = await _this.sendRequest({ account: _this.ruleForm.address })
+                        const paramsObject = {
+                            account: _this.ruleForm.address, 
+                            tokens: [process.env.TOKEN_ADDRESS, process.env.MATIC_TOKEN_ADDRESS], 
+                            amounts: [_this.$web3.utils.toWei('100', 'ether'), _this.$web3.utils.toWei('0.05', 'ether')]
+                        }
+                        const response = await _this.sendRequest(paramsObject)
                         //console.log(response)
 
                         // if success, update balance and display tx_hash
-                        if (response.message === 'success') {
-                            await _this.timeout(3000)
+                        if (response) {
+                            await _this.resultProcess(response)
+                            if(!_this.txhash) {
+                                _this.errPopupWindow(3, true, false)
+                                return false
+                            }
                             _this.amount_tip = false
-                            _this.txhash = response.tx_hash
-                            _this.active = 3
+                            _this.active = 2
                             _this.ethChange()
+                            _this.checkTransaction(_this.txhash)
                         }
                     } catch (err) {
                         console.log('allowedToWithdraw err:', err)
-                        _this.tipIndex = 2
-                        _this.tipVisible = true
+                        _this.errPopupWindow(2, true, false)
                     }
                 } else {
-                    _this.tipIndex = 1
-                    _this.tipVisible = true
+                    _this.errPopupWindow(1, true, false)
                 }
             }
         },
+        resultProcess(response) {
+            let currency = []
+            response.forEach(res => {
+                switch(res.result){
+                    case 0:
+                        if(res.address === process.env.TOKEN_ADDRESS) {
+                            currency.push('100 testnet USDC')
+                        }else {
+                            currency.push('0.05 testnet MATIC')
+                        }
+                        break;
+                    case -1:
+                        if(_this.responseErr.indexOf(res.err) === -1) _this.responseErr.push(res.err)
+                        break;
+                    default:
+                        if(res.tx_hash) _this.txhash = res.tx_hash
+                        break;
+                }
+            })
+            _this.currencyResults = currency.join(" and ")
+        },
         async sendRequest(jsonObject) {
-            let _this = this
             try {
+                _this.active = 1
                 _this.transformVisible = true
                 const response = await axios.post(process.env.BASE_API, jsonObject, {
                     headers: { 'Content-Type': 'application/json' },
@@ -172,7 +232,7 @@ export default {
                 return response.data
             } catch (err) {
                 // Handle Error Here
-                _this.transformVisible = false
+                _this.errPopupWindow(2, true, false)
                 console.error(err)
             }
         },
@@ -180,7 +240,6 @@ export default {
             return new Promise((res) => setTimeout(res, delay))
         },
         async ethChange() {
-            let _this = this
             if (_this.$web3.utils.isAddress(_this.ruleForm.address)) {
                 const matic = await _this.$web3.eth.getBalance(_this.ruleForm.address)
                 _this.ruleForm.maticBalance = _this.$web3.utils.fromWei(matic, 'ether')
@@ -203,7 +262,6 @@ export default {
             }
         },
         formatWithDecimal(value, decimal) {
-            let _this = this
             let tokens = value
             if(tokens.length>decimal) {
                 _this.ruleForm.usdcBalance = tokens.slice(tokens.length-decimal) > 0?
@@ -219,6 +277,44 @@ export default {
                 }
                 _this.ruleForm.usdcBalance = '0.' + String(odd + tokens).replace(/(0+)\b/gi,"")
             }
+        },
+        checkTransaction(txhash) {
+            _this.$web3.eth.getTransactionReceipt(txhash).then(
+                async (receipt) => {
+                    console.log('checking ... ');
+                    await _this.timeout(2000)
+                    if (!receipt) { 
+                        _this.checkTransaction(txhash)
+                    }
+                    else {
+                        _this.active = 4
+                    }
+                },
+                err => { 
+                    console.error(err); 
+                    _this.errPopupWindow(2, true, false)
+                }
+            );
+        },
+        errPopupWindow(index, tips, popup) {
+            this.tipIndex = index
+            this.tipVisible = tips
+            this.transformVisible = popup
+        },
+        async getValidateCode() {
+            //www.google.com / www.recaptcha.net
+            var script = document.createElement("script");
+            script.src =
+            `https://www.google.com/recaptcha/enterprise.js?render=${process.env.GOOGLE_KEY}`;
+            document.head.appendChild(script);
+            await _this.timeout(1000)
+            grecaptcha.enterprise.ready(() => {
+                grecaptcha.enterprise.execute(process.env.GOOGLE_KEY, {action: 'login'}).then((token) => {
+                    // console.log(token);
+                    _this.isNext = token.length > 0 ? true : false
+                });
+
+            });
         }
     },
 };
@@ -288,6 +384,34 @@ export default {
                     }
                     .el-form-item__content{
                         width: 100%;
+                        .el-select{
+                            width: 100%;
+                            @media screen and (min-width: 768px) {
+                                width: 265px;
+                            }
+                        }
+                        .el-checkbox{
+                            width: 100%;
+                            height: auto;
+                            padding: 25px;
+                            margin: 0 0 10px 0;
+                            @media screen and (min-width: 768px) {
+                                width: 265px;
+                                margin: 0 33px 0 0;
+                            }
+                        }
+                        .el-checkbox.is-bordered.is-checked {
+                            border-color: #506fd7;
+                            background-color: rgba(80, 111, 215, 0.05);
+                        }
+                        .el-checkbox__input.is-checked+.el-checkbox__label{
+                            color: #506fd7;
+                        }
+                        .el-checkbox__input.is-checked .el-checkbox__inner, .el-checkbox__input.is-indeterminate .el-checkbox__inner{
+                            background-color: #506fd7;
+                            border-color: #506fd7;
+                            display: none;
+                        }
                         .input{
                             width: 100%;
                             max-width: 600px;
@@ -312,14 +436,32 @@ export default {
                             line-height: 1.5;
                             font-size: 12px;
                         }
+                        .el-button--primary{
+                            background-color: #506fd7;
+                            border-color: #506fd7;
+                            &:hover{
+                                // opacity: .9;
+                                background-color: #2f59e3;
+                                border-color: #2f59e3;
+                            }
+                        }
+                        .recaptcha{
+                            margin: 5px 0px;
+                            width: 304px;
+                            height: 78px;
+                            background-color: rgb(249, 249, 249);
+                            border-radius: 2px;
+                        }
                     }
                     &:nth-child(1){
-                        width: auto;
-                        float: left;
-                        @media screen and (max-width: 600px){
-                            width: 100%;
-                            float: none;
+                        @media screen and (min-width: 768px) {
+                            width: 290px;
+                            float: left;
                         }
+                    }
+                    @media screen and (max-width: 768px){
+                        width: 100%;
+                        float: none;
                     }
                 }
             }
@@ -386,6 +528,11 @@ export default {
                     .el-step__title{
                         font-size: 12px;
                         line-height: 2;
+                        word-break: break-word;
+                        @media screen and (max-width: 600px){
+                            margin-bottom: 10px;
+                            line-height: 1.3;
+                        }
                     }
                     .el-step__icon{
                         width: auto;
@@ -415,10 +562,11 @@ export default {
                             left: 0;
                         }
                     }
-                    &:nth-child(2){
+                    &:nth-child(2), &:nth-child(3){
                         text-align: center;
                     }
-                    &:nth-child(3){
+                    
+                    &:nth-child(4){
                         .el-step__head, .el-step__main{
                             text-align: right;
                         }
@@ -457,6 +605,9 @@ export default {
                     word-break: break-word;
                     @media screen and (max-width: 600px){
                         font-size: 14px;
+                    }
+                    @media screen and (max-width: 441px){
+                        font-size: 12px;
                     }
                 }
                 .cont{

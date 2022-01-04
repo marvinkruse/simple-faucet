@@ -9,6 +9,9 @@ WORKDIR /usr/src/app
 # copy both 'package.json' and 'package-lock.json' (if available)
 COPY package*.json ./
 
+# fixes node-gyp-build gyp ERR! find Python
+RUN apk add --no-cache --virtual .gyp python2 make g++
+
 # install project dependencies
 RUN npm install
 

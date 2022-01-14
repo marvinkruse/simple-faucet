@@ -76,7 +76,11 @@ const faucetContract = new web3.eth.Contract(faucetInterface, faucetAddress, {
 
 let app = express()
 app.use(parser.json())
-app.use(cors())
+app.use(
+  cors({
+    origin: '*',
+  }),
+)
 
 app.post('/', async (req, res) => {
   const toAddress = req.body.account

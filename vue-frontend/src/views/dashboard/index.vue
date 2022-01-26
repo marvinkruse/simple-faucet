@@ -41,7 +41,7 @@
                 </el-form>
 
                 <div class="need">
-                    <img src="https://smartcontract.imgix.net/icons/Help.svg?auto=compress%2Cformat" />
+                    <img src="@/assets/images/Help.svg" />
                     <p class="Box-sc-1vpmd2a-0 Text-sc-9ymwu5-0 ecbXGb">
                         Need more testnet MATIC? Get MATIC from <a href="https://faucet.matic.network/" rel="noopener noreferrer" target="_blank">Polygon Mumbai Faucet</a>
                     </p>

@@ -7,7 +7,7 @@ export default {
   dashboard: {
   },
   footer: {
-    copy: '© 2021 FilSwan.All Rights reserved. ',
+    copy: '© 2022 FilSwan.All Rights reserved. ',
     privacy: 'Privacy',
   }
   

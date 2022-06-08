@@ -2,7 +2,10 @@ const express = require('express')
 const parser = require('body-parser')
 const cors = require('cors')
 const Web3 = require('web3')
+const svgCaptcha = require('svg-captcha')
+const session = require('express-session')
 const tokenConfig = require('./tokenConfig')
+
 require('dotenv').config()
 
 const web3 = new Web3(
@@ -75,14 +78,52 @@ const faucetContract = new web3.eth.Contract(faucetInterface, faucetAddress, {
 })
 
 let app = express()
-app.use(parser.json())
+app.use(session({
+  secret: 'nbfs-swan',
+  saveUninitialized: false,
+  resave: false,
+  cookie: {
+      maxAge: 300 * 1000
+  }
+}),parser.json())
 app.use(
   cors({
     origin: '*',
   }),
 )
 
+var HashMap = require('hashmap')
+var codeMap = new HashMap
+
+app.get('/code', function (req, res) {
+  var codeConfig = {
+    size: 5,
+    noise: 3,
+    fontSize:42,
+    color:true,
+    background:"#f5f7fa",
+    width:150,
+    height: 38
+  }
+  var captcha = svgCaptcha.create(codeConfig);
+  var verification_code = captcha.text.toLowerCase();
+  codeMap.set(verification_code,verification_code)
+  var codeData = {
+    img:captcha.data
+  }
+  res.type('svg');
+  res.status(200).send(captcha.data);
+})
+
 app.post('/', async (req, res) => {
+  const verification_code = req.body.verification_code.toLowerCase()
+
+  if (verification_code != codeMap.get(verification_code)) {
+    res.status(505).json("verification code failed")
+    return
+  }
+  codeMap.delete(verification_code)
+
   const toAddress = req.body.account
   const checkSumAddress = await web3.utils.toChecksumAddress(toAddress)
   const tokenAmounts = req.body.amounts

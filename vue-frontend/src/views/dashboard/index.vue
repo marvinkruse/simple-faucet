@@ -43,8 +43,8 @@
                     </el-form-item>
                     <el-form-item>
                         <el-button 
-                            :type="ruleForm.address && !ruleForm.address_tip && isNext && ruleForm.verification_code?'primary':'info'" 
-                            :disabled="ruleForm.address && !ruleForm.address_tip && isNext && ruleForm.verification_code?false:true" 
+                            :type="ruleForm.address && !ruleForm.address_tip && ruleForm.verification_code?'primary':'info'" 
+                            :disabled="ruleForm.address && !ruleForm.address_tip && ruleForm.verification_code?false:true" 
                             @click="onSubmit">Send request</el-button>
                     </el-form-item>
                 </el-form>
@@ -159,7 +159,6 @@ export default {
             tipIndex: 1,
             active: 1,
             txhash: '',
-            isNext: false,
             responseErr: [],
             currencyResults: ''
         };
@@ -172,7 +171,6 @@ export default {
     },
     mounted() {
         _this = this
-        _this.getValidateCode()
     },
     methods: {
         async onSubmit() {
@@ -249,6 +247,7 @@ export default {
                 if(err.response.status == 505) {
                     _this.$message.error('Verification Code Error.');
                     _this.transformVisible = false
+                    _this.refish()
                     return false
                 }
                 _this.errPopupWindow(2, true, false)
@@ -318,21 +317,6 @@ export default {
             this.tipIndex = index
             this.tipVisible = tips
             this.transformVisible = popup
-        },
-        async getValidateCode() {
-            //www.google.com / www.recaptcha.net
-            var script = document.createElement("script");
-            script.src =
-            `https://www.google.com/recaptcha/enterprise.js?render=${process.env.GOOGLE_KEY}`;
-            document.head.appendChild(script);
-            await _this.timeout(1000)
-            grecaptcha.enterprise.ready(() => {
-                grecaptcha.enterprise.execute(process.env.GOOGLE_KEY, {action: 'login'}).then((token) => {
-                    // console.log(token);
-                    _this.isNext = token.length > 0 ? true : false
-                });
-
-            });
         },
         async refish() {
             _this.ruleForm.verification_loading = true

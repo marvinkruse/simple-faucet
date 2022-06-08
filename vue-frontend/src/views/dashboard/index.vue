@@ -32,16 +32,25 @@
                             <el-checkbox v-for="amount in ruleForm.contract_amount" :label="amount.token" :key="amount.token" border disabled>{{amount.labal}}</el-checkbox>
                         </el-checkbox-group>
                     </el-form-item>
+                    <el-form-item label="Verification Code">
+                        <el-input placeholder="" v-model="ruleForm.verification_code" class="verification">
+                            <template slot="append">
+                                <div class="verification_loading" v-loading="ruleForm.verification_loading">
+                                    <img :src="ruleForm.verification_link" @click="refish" class="captcha-img">
+                                </div>
+                            </template>
+                        </el-input>
+                    </el-form-item>
                     <el-form-item>
                         <el-button 
-                            :type="ruleForm.address && !ruleForm.address_tip && isNext?'primary':'info'" 
-                            :disabled="ruleForm.address && !ruleForm.address_tip && isNext?false:true" 
+                            :type="ruleForm.address && !ruleForm.address_tip && isNext && ruleForm.verification_code?'primary':'info'" 
+                            :disabled="ruleForm.address && !ruleForm.address_tip && isNext && ruleForm.verification_code?false:true" 
                             @click="onSubmit">Send request</el-button>
                     </el-form-item>
                 </el-form>
 
                 <div class="need">
-                    <img src="https://smartcontract.imgix.net/icons/Help.svg?auto=compress%2Cformat" />
+                    <img src="@/assets/images/Help.svg" />
                     <p class="Box-sc-1vpmd2a-0 Text-sc-9ymwu5-0 ecbXGb">
                         Need more testnet MATIC? Get MATIC from <a href="https://faucet.matic.network/" rel="noopener noreferrer" target="_blank">Polygon Mumbai Faucet</a>
                     </p>
@@ -141,6 +150,9 @@ export default {
                     labal: '0.05 test MATIC',
                     token: 'MATIC'
                 }],
+                verification_code: '',
+                verification_link: process.env.BASE_API+'code',
+                verification_loading: false
             },
             transformVisible: false,
             tipVisible: false,
@@ -168,16 +180,17 @@ export default {
             _this.tx_hash = ''
             if (_this.$web3.utils.isAddress(_this.ruleForm.address)) {
                 const allowedToWithdraw = await _this.$faucetContract.methods.allowedToWithdraw(_this.ruleForm.address).call()
-                
+    
                 if (allowedToWithdraw) {
                     try {
                         // send request for tokens
                         const paramsObject = {
                             account: _this.ruleForm.address, 
                             tokens: [process.env.TOKEN_ADDRESS, process.env.MATIC_TOKEN_ADDRESS], 
-                            amounts: [_this.$web3.utils.toWei('100', 'ether'), _this.$web3.utils.toWei('0.05', 'ether')]
+                            amounts: [_this.$web3.utils.toWei('100', 'ether'), _this.$web3.utils.toWei('0.05', 'ether')],
+                            verification_code: _this.ruleForm.verification_code
                         }
-                        const response = await _this.sendRequest(paramsObject)
+                        const response = await _this.sendRequest(process.env.BASE_API, paramsObject)
                         //console.log(response)
 
                         // if success, update balance and display tx_hash
@@ -222,18 +235,23 @@ export default {
             })
             _this.currencyResults = currency.join(" and ")
         },
-        async sendRequest(jsonObject) {
+        async sendRequest(apiLink, jsonObject) {
             try {
                 _this.active = 1
                 _this.transformVisible = true
-                const response = await axios.post(process.env.BASE_API, jsonObject, {
+                const response = await axios.post(apiLink, jsonObject, {
                     headers: { 'Content-Type': 'application/json' },
                 })
                 return response.data
             } catch (err) {
                 // Handle Error Here
+                // console.error(err, err.response, err.response.status)
+                if(err.response.status == 505) {
+                    _this.$message.error('Verification Code Error.');
+                    _this.transformVisible = false
+                    return false
+                }
                 _this.errPopupWindow(2, true, false)
-                console.error(err)
             }
         },
         timeout (delay) {
@@ -315,6 +333,13 @@ export default {
                 });
 
             });
+        },
+        async refish() {
+            _this.ruleForm.verification_loading = true
+            await _this.timeout(500)
+            let time = (new Date()).getTime()
+            _this.ruleForm.verification_link = `${process.env.BASE_API}code?_v=${time}`
+            _this.ruleForm.verification_loading = false
         }
     },
 };
@@ -451,6 +476,32 @@ export default {
                             height: 78px;
                             background-color: rgb(249, 249, 249);
                             border-radius: 2px;
+                        }
+                    }
+                    .verification{
+                        max-width: 400px;
+                        .el-input-group__append{
+                            height: 38px;
+                            padding: 0;
+                            .verification_loading{
+                                min-width: 150px;
+                                height: 38px;
+                                padding: 0 10px;
+                                img{
+                                    display: block;
+                                    height: 100%;
+                                    cursor: pointer;
+                                }
+                                .el-loading-mask{
+                                    .el-loading-spinner{
+                                        margin-top: -15px;
+                                        .circular, svg{
+                                            width: 30px;
+                                            height: 30px;
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                     &:nth-child(1){

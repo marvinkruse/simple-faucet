@@ -5,6 +5,7 @@ const Web3 = require('web3')
 const svgCaptcha = require('svg-captcha')
 const session = require('express-session')
 const tokenConfig = require('./tokenConfig')
+const rateLimit = require('express-rate-limit')
 
 require('dotenv').config()
 
@@ -77,15 +78,26 @@ const faucetContract = new web3.eth.Contract(faucetInterface, faucetAddress, {
   from: walletAddress,
 })
 
+// add 24 hour rate limit
+const limiter = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000, // 24h minutes
+  max: 1, // Limit each IP to 1 requests per `window` (here 24h window),
+  handler: (req, res) => res.status(429).json('rate limit exceeded'),
+  skipFailedRequests: true,
+})
+
 let app = express()
-app.use(session({
-  secret: 'nbfs-swan',
-  saveUninitialized: false,
-  resave: false,
-  cookie: {
-      maxAge: 300 * 1000
-  }
-}),parser.json())
+app.use(
+  session({
+    secret: 'nbfs-swan',
+    saveUninitialized: false,
+    resave: false,
+    cookie: {
+      maxAge: 300 * 1000,
+    },
+  }),
+  parser.json(),
+)
 app.use(
   cors({
     origin: '*',
@@ -93,33 +105,33 @@ app.use(
 )
 
 var HashMap = require('hashmap')
-var codeMap = new HashMap
+var codeMap = new HashMap()
 
 app.get('/code', function (req, res) {
   var codeConfig = {
     size: 5,
     noise: 3,
-    fontSize:42,
-    color:true,
-    background:"#f5f7fa",
-    width:150,
-    height: 38
+    fontSize: 42,
+    color: true,
+    background: '#f5f7fa',
+    width: 150,
+    height: 38,
   }
-  var captcha = svgCaptcha.create(codeConfig);
-  var verification_code = captcha.text.toLowerCase();
-  codeMap.set(verification_code,verification_code)
+  var captcha = svgCaptcha.create(codeConfig)
+  var verification_code = captcha.text.toLowerCase()
+  codeMap.set(verification_code, verification_code)
   var codeData = {
-    img:captcha.data
+    img: captcha.data,
   }
-  res.type('svg');
-  res.status(200).send(captcha.data);
+  res.type('svg')
+  res.status(200).send(captcha.data)
 })
 
-app.post('/', async (req, res) => {
+app.post('/', limiter, async (req, res) => {
   const verification_code = req.body.verification_code.toLowerCase()
 
   if (verification_code != codeMap.get(verification_code)) {
-    res.status(505).json("verification code failed")
+    res.status(505).json('verification code failed')
     return
   }
   codeMap.delete(verification_code)

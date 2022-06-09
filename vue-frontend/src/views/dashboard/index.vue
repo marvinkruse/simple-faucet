@@ -317,6 +317,7 @@ export default {
             this.tipIndex = index
             this.tipVisible = tips
             this.transformVisible = popup
+            this.refish()
         },
         async refish() {
             _this.ruleForm.verification_loading = true

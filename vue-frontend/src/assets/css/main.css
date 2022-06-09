@@ -94,6 +94,13 @@ a {
     margin: auto;
 }
 
+.el-message, .el-message .el-icon-error{
+    font-size: 35px;
+}
+.v-modal{
+    background: rgba(0, 0, 0, 1);
+    opacity: 0.5;
+}
 @media screen and (max-width:1800px){
   html,
   body,

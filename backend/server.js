@@ -6,6 +6,7 @@ const svgCaptcha = require('svg-captcha')
 const session = require('express-session')
 const tokenConfig = require('./tokenConfig')
 const rateLimit = require('express-rate-limit')
+const redis = require('./redis')
 
 require('dotenv').config()
 
@@ -107,6 +108,17 @@ app.use(
 app.set('trust proxies')
 
 app.get('/ip', limiter, async (req, res) => res.status(200).send(req.ip))
+
+app.get('/route', async (req, res) => {
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
+  const requests = await redis.incr(ip)
+  if (requests === 1) {
+    await redis.expire(ip, 60)
+  }
+  if (requests > 1) {
+    res.status(429).send('rate limit exceeded')
+  } else res.json('You have successfully hit route')
+})
 
 var HashMap = require('hashmap')
 var codeMap = new HashMap()

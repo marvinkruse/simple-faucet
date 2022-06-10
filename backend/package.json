@@ -11,6 +11,7 @@
     "express-session": "^1.17.3",
     "hashmap": "^2.4.0",
     "http": "^0.0.1-security",
+    "ioredis": "^5.0.6",
     "svg-captcha": "^1.4.0",
     "web3": "^1.6.1"
   },

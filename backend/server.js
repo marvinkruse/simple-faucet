@@ -80,7 +80,7 @@ const faucetContract = new web3.eth.Contract(faucetInterface, faucetAddress, {
 
 // add 24 hour rate limit
 const limiter = rateLimit({
-  windowMs: 24 * 60 * 60 * 1000, // 24h minutes
+  windowMs: 60 * 1000, // 24h minutes
   max: 1, // Limit each IP to 1 requests per `window` (here 24h window),
   handler: (req, res) => res.status(429).json('rate limit exceeded'),
   skipFailedRequests: true,
@@ -103,6 +103,10 @@ app.use(
     origin: '*',
   }),
 )
+
+app.set('trust proxies')
+
+app.get('/ip', limiter, async (req, res) => res.status(200).send(req.ip))
 
 var HashMap = require('hashmap')
 var codeMap = new HashMap()
@@ -136,106 +140,9 @@ app.post('/', limiter, async (req, res) => {
   }
   codeMap.delete(verification_code)
 
-  const toAddress = req.body.account
-  const checkSumAddress = await web3.utils.toChecksumAddress(toAddress)
-  const tokenAmounts = req.body.amounts
-  const tokenAddresses = await Promise.all(
-    req.body.tokens.map(
-      async (tokenAddress) => await web3.utils.toChecksumAddress(tokenAddress),
-    ),
-  )
-
-  // get faucet balance status, also remove addressese from array
-  const {
-    faucetStatus,
-    eligibleTokens,
-    eligibleAmounts,
-  } = await checkFaucetStatus(tokenAddresses, tokenAmounts, checkSumAddress)
-
-  if (eligibleTokens.length > 0) {
-    try {
-      const transaction = await faucetContract.methods
-        .sendMultiTokens(eligibleTokens, eligibleAmounts, checkSumAddress)
-        .send({ gas: 9999999 })
-
-      console.log(transaction.transactionHash)
-
-      res.json([...faucetStatus, { tx_hash: transaction.transactionHash }])
-    } catch (err) {
-      console.log(err)
-      res.status(500).json(err)
-    }
-  } else res.json(faucetStatus)
+  res.status(200).send('success')
 })
 
 app.listen(port, () => {
   console.log(`Faucet server listening at http://localhost:${port}`)
 })
-
-// return object { status, eligibleTokens, eligibleAmounts }
-const checkFaucetStatus = async (tokenAddresses, tokenAmounts, address) => {
-  let faucetStatus = []
-  let eligibleTokens = []
-  let eligibleAmounts = []
-
-  const allowedToWithdraw = await faucetContract.methods
-    .allowedToWithdraw(address)
-    .call()
-
-  // if user is not allowed to withdraw, dont need to run for loop
-  if (!allowedToWithdraw) {
-    faucetStatus = tokenAddresses.map((tokenAddress) => {
-      return { address: tokenAddress, result: -1, err: 'please wait 24 hrs' }
-    })
-  } else {
-    for (let i = 0; i < tokenAddresses.length; i++) {
-      let faucetBalance = 0
-      let addressStatus = { address: tokenAddresses[i], result: 0 }
-
-      // get faucet balance
-      if (tokenAddresses[i] == '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE') {
-        faucetBalance = await web3.eth.getBalance(faucetAddress) // get MATIC balance
-      } else {
-        let tokenContract = new web3.eth.Contract(
-          tokenInterface,
-          tokenAddresses[i],
-        )
-        faucetBalance = await tokenContract.methods
-          .balanceOf(faucetAddress)
-          .call()
-      }
-
-      // get token max amount
-      const tokenObject = tokenConfig.filter((tokenObject) => {
-        return tokenObject.tokenAddress == tokenAddresses[i]
-      })[0]
-
-      // if there is an err (tokenAmount too large, not enough token balance) set err message
-      if (
-        web3.utils.toBN(faucetBalance).lt(web3.utils.toBN(tokenAmounts[i])) ||
-        web3.utils
-          .toBN(tokenAmounts[i])
-          .gt(web3.utils.toBN(tokenObject.maxAmount))
-      ) {
-        // change the token status
-        addressStatus.result = -1
-        addressStatus.err = `running out of ${tokenObject.name} tokens`
-
-        // change err message if token amount is too large
-        if (
-          web3.utils
-            .toBN(tokenAmounts[i])
-            .gt(web3.utils.toBN(tokenObject.maxAmount))
-        )
-          addressStatus.err = 'exceeding maximum amount'
-      } else {
-        eligibleTokens.push(tokenAddresses[i])
-        eligibleAmounts.push(tokenAmounts[i])
-      }
-
-      faucetStatus.push(addressStatus)
-    }
-  }
-
-  return { faucetStatus, eligibleTokens, eligibleAmounts }
-}

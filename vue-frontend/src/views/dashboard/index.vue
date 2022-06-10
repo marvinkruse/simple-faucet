@@ -243,14 +243,17 @@ export default {
                 return response.data
             } catch (err) {
                 // Handle Error Here
-                // console.error(err, err.response, err.response.status)
+                // console.error(err.response.data, err.response.status)
                 if(err.response.status == 505) {
                     _this.$message.error('Verification Code Error.');
                     _this.transformVisible = false
                     _this.refish()
                     return false
+                }else if(err.response.status == 429){
+                    _this.errPopupWindow(1, true, false)
+                }else{
+                    _this.errPopupWindow(2, true, false)
                 }
-                _this.errPopupWindow(2, true, false)
             }
         },
         timeout (delay) {

@@ -6,6 +6,7 @@
                 <p>{{$t('footer.copy')}}</p>
             </div>
         </div>
+        <div id="version">v2.0.10</div>
     </div>
 </template>
 <script>
@@ -69,6 +70,13 @@ export default {
                 border-radius: 0.05rem;
             }
         }
+    }
+    #version{
+        position: absolute;
+        right: 5px;
+        bottom: 5px;
+        font-size: 12px;
+        color: #1a2a6a;
     }
 }
 .footer_position{

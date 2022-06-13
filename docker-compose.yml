@@ -1,5 +1,7 @@
 version: "3.9"
 services:
+  redis-server:
+    image: 'redis'
   backend:
     build: backend
     env_file:

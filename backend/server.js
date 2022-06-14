@@ -111,31 +111,31 @@ const verifyCode = async (req, res, next) => {
 }
 
 // add 24 hour rate limit
-const limiter = ({ timeoutSeconds, numAllowedRequest }) => async (
-  req,
-  res,
-  next,
-) => {
+const limiter = async (req, res, next) => {
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
-  const requests = await redis.incr(ip)
-  if (requests === 1) {
-    await redis.expire(ip, timeoutSeconds)
-  }
-  if (requests > numAllowedRequest) {
+  const requests = await redis.get(ip)
+  if (requests >= 1) {
     res.status(429).send('rate limit exceeded')
   } else next()
 }
 // ****************************************************************
 
-app.get(
-  '/ip',
-  verifyCode,
-  limiter({ timeoutSeconds: 60, numAllowedRequest: 2 }),
-  async (req, res) =>
-    res
-      .status(200)
-      .send(req.headers['x-forwarded-for'] || req.socket.remoteAddress),
-)
+app.get('/ttl', async (req, res, next) => {
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
+  const ttl = await redis.ttl(ip)
+  res.status(200).send({ ip, ttl })
+})
+
+app.get('/req', limiter, async (req, res) => {
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
+  const requests = await redis.incr(ip)
+
+  if (requests === 1) {
+    await redis.expire(ip, 20)
+  }
+
+  res.status(200).send({ ip, requests })
+})
 
 app.get('/code', function (req, res) {
   var codeConfig = {
@@ -157,44 +157,45 @@ app.get('/code', function (req, res) {
   res.status(200).send(captcha.data)
 })
 
-app.post(
-  '/',
-  verifyCode,
-  limiter({ timeoutSeconds: 60 * 60 * 24, numAllowedRequest: 1 }),
-  async (req, res) => {
-    const toAddress = req.body.account
-    const checkSumAddress = await web3.utils.toChecksumAddress(toAddress)
-    const tokenAmounts = req.body.amounts
-    const tokenAddresses = await Promise.all(
-      req.body.tokens.map(
-        async (tokenAddress) =>
-          await web3.utils.toChecksumAddress(tokenAddress),
-      ),
-    )
+app.post('/', verifyCode, limiter, async (req, res) => {
+  const toAddress = req.body.account
+  const checkSumAddress = await web3.utils.toChecksumAddress(toAddress)
+  const tokenAmounts = req.body.amounts
+  const tokenAddresses = await Promise.all(
+    req.body.tokens.map(
+      async (tokenAddress) => await web3.utils.toChecksumAddress(tokenAddress),
+    ),
+  )
 
-    // get faucet balance status, also remove addressese from array
-    const {
-      faucetStatus,
-      eligibleTokens,
-      eligibleAmounts,
-    } = await checkFaucetStatus(tokenAddresses, tokenAmounts, checkSumAddress)
+  // get faucet balance status, also remove addressese from array
+  const {
+    faucetStatus,
+    eligibleTokens,
+    eligibleAmounts,
+  } = await checkFaucetStatus(tokenAddresses, tokenAmounts, checkSumAddress)
 
-    if (eligibleTokens.length > 0) {
-      try {
-        const transaction = await faucetContract.methods
-          .sendMultiTokens(eligibleTokens, eligibleAmounts, checkSumAddress)
-          .send({ gas: 9999999 })
+  if (eligibleTokens.length > 0) {
+    try {
+      const transaction = await faucetContract.methods
+        .sendMultiTokens(eligibleTokens, eligibleAmounts, checkSumAddress)
+        .send({ gas: 9999999 })
 
-        console.log(transaction.transactionHash)
+      const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
+      const requests = await redis.incr(ip)
 
-        res.json([...faucetStatus, { tx_hash: transaction.transactionHash }])
-      } catch (err) {
-        console.log(err)
-        res.status(500).json(err)
+      if (requests === 1) {
+        await redis.expire(ip, 60 * 60 * 24)
       }
-    } else res.json(faucetStatus)
-  },
-)
+
+      console.log(transaction.transactionHash)
+
+      res.json([...faucetStatus, { tx_hash: transaction.transactionHash }])
+    } catch (err) {
+      console.log(err)
+      res.status(500).json(err)
+    }
+  } else res.json(faucetStatus)
+})
 
 app.listen(port, () => {
   console.log(`Faucet server listening at http://localhost:${port}`)
